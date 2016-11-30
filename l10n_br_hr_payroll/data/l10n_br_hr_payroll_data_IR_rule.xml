@@ -10,7 +10,7 @@
             <field name="condition_select">python</field>
             <field name="condition_python">result = 2826.65 >= (contract.wage-employee.n_dependent+INSS) >= 1903.99</field>
             <field name="amount_select">code</field>
-			<field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.075)-142.80))</field>
+            <field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.075)-142.80))</field>
             <field eval="102" name="sequence"/>
             <field name="register_id" ref="hr_ir_contribution_register"/>
             <field name="note">Imposto de Renda Salarial
@@ -27,7 +27,7 @@
             <field name="condition_select">python</field>
             <field name="condition_python">result = 3751.05 >= (contract.wage-employee.n_dependent+INSS) >= 2826.66</field>
             <field name="amount_select">code</field>
-			<field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.15)-354.80))</field>
+            <field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.15)-354.80))</field>
             <field eval="102" name="sequence"/>
             <field name="register_id" ref="hr_ir_contribution_register"/>
             <field name="note">Imposto de Renda Salarial
@@ -44,7 +44,7 @@
             <field name="condition_select">python</field>
             <field name="condition_python">result = 4664.68 >= (contract.wage-employee.n_dependent+INSS) >= 3751.06</field>
             <field name="amount_select">code</field>
-			<field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.225)-636.13))</field>
+            <field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.225)-636.13))</field>
             <field eval="102" name="sequence"/>
             <field name="register_id" ref="hr_ir_contribution_register"/>
             <field name="note">Imposto de Renda Salarial
@@ -61,7 +61,7 @@
             <field name="condition_select">python</field>
             <field name="condition_python">result = (contract.wage-employee.n_dependent+INSS) >= 4664.68</field>
             <field name="amount_select">code</field>
-			<field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.275)-869.36))</field>
+            <field name="amount_python_compute">result=(-(((contract.wage-employee.n_dependent+INSS)*0.275)-869.36))</field>
             <field eval="102" name="sequence"/>
             <field name="register_id" ref="hr_ir_contribution_register"/>
             <field name="note">Imposto de Renda Salarial

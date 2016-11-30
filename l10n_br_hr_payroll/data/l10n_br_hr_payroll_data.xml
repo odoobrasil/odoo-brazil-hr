@@ -51,13 +51,13 @@
             <field name="name">INSS</field>
             <field name="category_id" ref="hr_payroll.DED"/>           
             <field name="amount_select">code</field>
-			<field name="amount_python_compute">result =(-513.01 if
+            <field name="amount_python_compute">result =(-513.01 if
                 ((contract.wage) &gt;= 4663.76) else -((contract.wage) * 0.11) if ((contract.wage) &gt;= 2331.89) and ((contract.wage) &lt;=4663.75) else -((contract.wage) * 0.09) if ((contract.wage) &gt;= 1399.13) and ((contract.wage) &lt;= 2331.88) else -((contract.wage) * 0.08))</field>
             <field name="sequence" eval="101"/>
             <field name="register_id" ref="hr_inss_contribution_register"/>
             <field name="note">INSS</field>
         </record>  
-	
+    
         <record id="hr_salary_rule_imp_renda" model="hr.salary.rule">
             <field name="code">IR</field>
             <field name="name">Imposto de Renda</field>
@@ -120,11 +120,11 @@ for dependent in employee.dependent_ids: result -= contract.health_insurance_dep
             <field name="code">PA</field>
             <field name="name">Pensão Alimentícia</field>
             <field name="category_id" ref="hr_payroll.DED"/> 
-          	<field name="condition_select">none</field>          
+            <field name="condition_select">none</field>          
             <field name="amount_select">code</field>    
             <field name="amount_python_compute">result = 0
 for dependent in employee.dependent_ids: result -= dependent.pension_benefits if (dependent.dependent_verification) else 0
-			</field>        
+            </field>        
             <field name="sequence" eval="133"/>    
             <field name="register_id" ref="hr_psal_contribution_register"/>
             <field name="note">Empregado terá desconto sobre Pensão Alimenticia</field>
@@ -157,17 +157,17 @@ for dependent in employee.dependent_ids: result -= dependent.pension_benefits if
             <field name="note"> Empregado terá um desconto de 6% do seu salário mediante ao Vale Transporte.</field>
         </record>
                
-    	<record id="hr_payroll_rules_vr" model="hr.salary.rule">
-	        <field name="name">Vale Refeição</field>
-	        <field name="sequence">70</field>
-	        <field name="code">VR</field>
-	        <field name="category_id" ref="hr_payroll.COMP"/>
-	        <field name="condition_select">none</field>
-	        <field name="amount_select">code</field>
-	        <field name="amount_python_compute">result = (contract.value_vr * contract.workeddays) if contract.value_vr else 0</field>
+        <record id="hr_payroll_rules_vr" model="hr.salary.rule">
+            <field name="name">Vale Refeição</field>
+            <field name="sequence">70</field>
+            <field name="code">VR</field>
+            <field name="category_id" ref="hr_payroll.COMP"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = (contract.value_vr * contract.workeddays) if contract.value_vr else 0</field>
             <field name="register_id" ref="hr_vr_contribution_register"/> 
-	        <field name="note">Vale Refeição</field>
-    	</record>
+            <field name="note">Vale Refeição</field>
+        </record>
         
         <record id="hr_salary_rule_va" model="hr.salary.rule">
             <field name="name">Vale Alimentação</field>
