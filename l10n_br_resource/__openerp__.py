@@ -18,7 +18,9 @@
         'python': ['pybrasil'],
     },
     'data': [
+        'data/res_country_data.xml',
         'views/resource_calendar.xml',
+        'wizard/workalendar_holiday_import.xml',
     ],
     'demo': [
         'demo/resource_calendar.xml',
