@@ -102,6 +102,26 @@ class ResourceCalendar(models.Model):
             leaves.append(leave)
         return leaves
 
+    @api.multi
+    def data_eh_feriado(self, data_referencia=datetime.now()):
+        """Verificar se uma data é feriado.
+        :param datetime data_referencia: Se nenhuma data referencia for passada
+                                    verifique se hoje eh feriado.
+                                    Se a data referencia for passada, verifique
+                                    se a data esta dentro de algum leave
+                                    date_start <= data_referencia <= data_end
+
+        :return int leaves_count: +1 se for feriado
+                                   0 se a data nao for feriado
+        """
+        domain = [
+            ('date_from', '<=', data_referencia.strftime("%Y-%m-%d %H:%M:%S")),
+            ('date_to', '>=', data_referencia.strftime("%Y-%m-%d %H:%M:%S")),
+            ('leave_type', '<=', 'F'),
+        ]
+        leaves_count = self.env['resource.calendar.leaves'].search_count(domain)
+        return leaves_count
+
 
 class ResourceCalendarLeave(models.Model):
 
