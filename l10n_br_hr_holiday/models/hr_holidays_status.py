@@ -2,12 +2,13 @@
 # Copyright 2016 KMEE INFORMATICA LTDA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from openerp import api, fields, models, _
+from openerp import fields, models
 
 TYPE_DAY = [
     ('uteis', u'Dias úteis Consecutivos'),
     ('corridos', u'Dias corridos'),
 ]
+
 
 class HrHolidaysStatus(models.Model):
 
