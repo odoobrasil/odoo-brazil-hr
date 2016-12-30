@@ -21,6 +21,7 @@ install:
   - git clone https://github.com/OCA/maintainer-quality-tools.git ${HOME}/maintainer-quality-tools
   - export PATH=${HOME}/maintainer-quality-tools/travis:${PATH}
   - pip install unidecode
+  - pip install https://github.com/aricaldeira/pybrasil/archive/master.zip
   - travis_install_nightly
 
 script:
