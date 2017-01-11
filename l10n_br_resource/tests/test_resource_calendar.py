@@ -3,10 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from openerp import fields
-# from openerp.addons.resource.tests import common
-# from odoo.tests.common import SingleTransactionCase
 import openerp.tests.common as test_common
-# from pybrasil import feriado
 
 
 class TestResourceCalendar(test_common.SingleTransactionCase):
@@ -134,3 +131,20 @@ class TestResourceCalendar(test_common.SingleTransactionCase):
         self.assertEqual(proximo_dia_util,
                          fields.Datetime.from_string('2016-12-19 00:00:01'),
                          'Partindo de um fds, próximo dia util inválido')
+
+    def test_06_get_dias_base(self):
+        """ Dado um intervalo de tempo, fornecer a quantidade de dias base
+        para cálculos da folha de pagamento"""
+        data_inicio = fields.Datetime.from_string('2017-01-01 00:00:01')
+        data_final = fields.Datetime.from_string('2017-01-31 23:59:59')
+
+        total = self.resource_calendar.get_dias_base(data_inicio, data_final)
+        self.assertEqual(total, 30,
+                         'Calculo de Dias Base de Jan incorreto')
+
+        data_inicio = fields.Datetime.from_string('2017-02-01 00:00:01')
+        data_final = fields.Datetime.from_string('2017-02-28 23:59:59')
+
+        total = self.resource_calendar.get_dias_base(data_inicio, data_final)
+        self.assertEqual(total, 28,
+                         'Calculo de Dias Base de Fev incorreto')
