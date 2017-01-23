@@ -2,6 +2,8 @@
 # Copyright 2016 KMEE INFORMATICA LTDA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+from openerp.addons.l10n_br_hr_holiday.models.hr_holidays \
+    import OCORRENCIA_TIPO
 from openerp import fields, models
 
 TYPE_DAY = [
@@ -32,4 +34,9 @@ class HrHolidaysStatus(models.Model):
     )
     need_attachment = fields.Boolean(
         string=u'Need attachment',
+    )
+
+    tipo = fields.Selection(
+        string=u'Tipo',
+        selection=OCORRENCIA_TIPO
     )
