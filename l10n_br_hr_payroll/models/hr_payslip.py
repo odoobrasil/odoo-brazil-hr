@@ -2,7 +2,7 @@
 # Copyright (C) 2016 KMEE (http://www.kmee.com.br)
 # License AGPL-3 - See http://www.gnu.org/licenses/agpl-3.0.html
 
-from openerp import api, fields, models
+from openerp import api, fields, models, exceptions, _
 from datetime import datetime
 
 MES_DO_ANO = [
@@ -246,6 +246,19 @@ class HrPayslip(models.Model):
         return 0.00
 
     @api.multi
+    def _get_rat_fap_period_values(self, year):
+        rat_fap_obj = self.env['l10n_br.hr.rat.fap']
+        rat_fap = rat_fap_obj = rat_fap_obj.search(
+            [('year', '=', year), ('company_id', '=', self.company_id.id)]
+        )
+        if rat_fap:
+            return rat_fap
+        else:
+            raise exceptions.Warning(
+                _('Can\'t find this year values in Rat Fap Table')
+            )
+
+    @api.multi
     def get_payslip_lines(self, payslip_id):
         """
         get_payslip_lines(cr, uid, contract_ids, payslip.id, context=context)]
@@ -356,13 +369,14 @@ class HrPayslip(models.Model):
         salario_mes = self._buscar_valor_salario('SALARIO_MES')
         salario_dia = self._buscar_valor_salario('SALARIO_DIA')
         salario_hora = self._buscar_valor_salario('SALARIO_HORA')
-
+        rat_fap = self._get_rat_fap_period_values(self.ano)
         baselocaldict = {
             'CALCULAR': payslip, 'BASE_INSS': 0.0, 'BASE_FGTS': 0.0,
             'BASE_IR': 0.0, 'categories': categories_obj, 'rules': rules_obj,
             'payslip': payslip_obj, 'worked_days': worked_days_obj,
             'inputs': input_obj, 'rubrica': None, 'SALARIO_MES': salario_mes,
             'SALARIO_DIA': salario_dia, 'SALARIO_HORA': salario_hora,
+            'RAT_FAP': rat_fap,
         }
 
         for contract_ids in self:
@@ -468,7 +482,6 @@ class HrPayslip(models.Model):
     @api.onchange('contract_id')
     def set_employee_id(self):
         for record in self:
-            record.employee_id = record.contract_id.employee_id
             record.struct_id = record.contract_id.struct_id
             record.employee_id_readonly = record.employee_id
             record.struct_id_readonly = record.struct_id
@@ -500,6 +513,8 @@ class HrPayslip(models.Model):
                 record.date_to = record.contract_id.date_end
             else:
                 record.date_to = str(ultimo_dia_do_mes)
+            record.employee_id = record.contract_id.employee_id
+            record.employee_id = record.contract_id.employee_id
 
     @api.multi
     def compute_sheet(self):
