@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2016 KMEE - Luis Felipe Miléo <mileo@kmee.com.br>
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+<openerp>
+    <data noupdate="1">
+    <!--<data>-->
+
+      <!--Demo 01-->
+        <!-- Employee -->
+        <record id="hr_employee_payroll_eugenio" model="hr.employee">
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active" eval="1"/>
+            <field name="name">Eugenio Manoel de Araujo Dias</field>
+            <field name="resource_type">user</field>
+        </record>
+
+        <!--Rubricas especificas -->
+        <record id="l10n_br_hr_payroll_rubrica_especifica_plano_de_saude" model="hr.contract.salary.rule">
+            <field name="rule_id" ref="hr_salary_rule_REMBOLSO_PLANO_SAUDE"/>
+            <field name="date_start" eval="'2014-01-02'"/>
+            <field name="specific_quantity">1.0</field>
+            <field name="specific_percentual">100</field>
+            <field name="specific_amount">400.00</field>
+        </record>
+
+        <record id="l10n_br_hr_payroll_rubrica_especifica_vale_alimentacao" model="hr.contract.salary.rule">
+            <field name="rule_id" ref="hr_salary_rule_VA_VR"/>
+            <field name="date_start" eval="'2014-01-02'"/>
+            <field name="specific_quantity">1.0</field>
+            <field name="specific_percentual">100</field>
+            <field name="specific_amount">6.04</field>
+        </record>
+
+        <!--Contract-->
+        <record model="hr.contract" id="hr_contract_eugenio">
+            <field name="name">Eugenio - 02-01-2014</field>
+            <field name="type_id" ref="hr_contract.hr_contract_type_emp"/>
+            <field name="date_start" eval="'2014-01-02'"/>
+            <field name="struct_id" ref="l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA"/>
+            <field name="employee_id" ref="hr_employee_payroll_eugenio"/>
+            <field name="notes">Contrato do Eugenio</field>
+            <field name="wage">29483.08</field>
+            <field name="specific_rule_ids" eval="[(6, 0, [ref('l10n_br_hr_payroll_rubrica_especifica_plano_de_saude'),ref('l10n_br_hr_payroll_rubrica_especifica_vale_alimentacao')])]"/>
+        </record>
+
+        <!--Payslip-->
+        <record model="hr.payslip" id="hr_payslip_eugenio_10">
+            <field name="contract_id" ref="hr_contract_eugenio"/>
+            <field name="ano">2016</field>
+            <field name="number">10-2016</field>
+            <field name="mes_do_ano" eval="10"></field>
+            <field name="employee_id" ref="hr_employee_payroll_eugenio"/>
+        </record>
+
+    </data>
+</openerp>
