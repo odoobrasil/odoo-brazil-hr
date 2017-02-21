@@ -4,3 +4,4 @@
 
 from . import test_hr_payslip
 from . import test_hr_payslip_rubricas
+from . import test_hr_salary_rule
