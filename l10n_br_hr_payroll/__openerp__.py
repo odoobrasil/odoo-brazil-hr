@@ -46,6 +46,7 @@
     ],
     'demo': [
         'demo/hr_contract.xml',
+        'demo/hr_payroll_test.xml',
     ],
     'installable': True,
     'auto_install': False,

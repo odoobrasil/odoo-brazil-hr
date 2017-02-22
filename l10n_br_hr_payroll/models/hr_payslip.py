@@ -108,32 +108,40 @@ class HrPayslip(models.Model):
                     inss = line.total
                 elif codigo['IRPF']:
                     irpf = line.total
-            holerite.total_folha = total
-            holerite.total_proventos = total_proventos
-            holerite.total_descontos = total_descontos
-            holerite.base_fgts = base_fgts
-            holerite.base_inss = base_inss
-            holerite.base_irpf = base_irpf
-            holerite.fgts = fgts
-            holerite.inss = inss
-            holerite.irpf = irpf
-            # Formato
-            holerite.data_admissao_fmt =\
-                data.formata_data(holerite.contract_id.date_start)
-            holerite.salario_base_fmt =\
-                valor.formata_valor(holerite.contract_id.wage)
-            holerite.total_folha_fmt =\
-                valor.formata_valor(holerite.total_folha)
-            holerite.total_proventos_fmt =\
-                valor.formata_valor(holerite.total_proventos)
-            holerite.total_descontos_fmt =\
-                valor.formata_valor(holerite.total_descontos)
-            holerite.base_fgts_fmt = valor.formata_valor(holerite.base_fgts)
-            holerite.base_inss_fmt = valor.formata_valor(holerite.base_inss)
-            holerite.base_irpf_fmt = valor.formata_valor(holerite.base_irpf)
-            holerite.fgts_fmt = valor.formata_valor(holerite.fgts)
-            holerite.inss_fmt = valor.formata_valor(holerite.inss)
-            holerite.irpf_fmt = valor.formata_valor(holerite.irpf)
+            holerite.write({
+                'total_folha': total,
+                'total_proventos': total_proventos,
+                'total_descontos': total_descontos,
+                'base_fgts': base_fgts,
+                'base_inss': base_inss,
+                'base_irpf': base_irpf,
+                'fgts': fgts,
+                'inss': inss,
+                'irpf': irpf,
+                # Formato
+                'data_admissao_fmt': data.formata_data(
+                    holerite.contract_id.date_start),
+                'salario_base_fmt': valor.formata_valor(
+                    holerite.contract_id.wage),
+                'total_folha_fmt': valor.formata_valor(
+                    holerite.total_folha),
+                'total_proventos_fmt': valor.formata_valor(
+                    holerite.total_proventos),
+                'total_descontos_fmt': valor.formata_valor(
+                    holerite.total_descontos),
+                'base_fgts_fmt': valor.formata_valor(
+                    holerite.base_fgts),
+                'base_inss_fmt': valor.formata_valor(
+                    holerite.base_inss),
+                'base_irpf_fmt': valor.formata_valor(
+                    holerite.base_irpf),
+                'fgts_fmt': valor.formata_valor(
+                    holerite.fgts),
+                'inss_fmt': valor.formata_valor(
+                    holerite.inss),
+                'irpf_fmt': valor.formata_valor(
+                    holerite.irpf),
+            })
 
     employee_id_readonly = fields.Many2one(
         string=u'Funcionário',
