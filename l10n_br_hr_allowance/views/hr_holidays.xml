@@ -7,6 +7,7 @@
             <field name="arch" type="xml">
                 <field name="employee_id" position="replace">
                     <field name="employee_id" invisible="1"/>
+                    <field name="employee_id_readonly" readonly="True"/>
                     <field name="contrato_id"/>
                 </field>
             </field>
