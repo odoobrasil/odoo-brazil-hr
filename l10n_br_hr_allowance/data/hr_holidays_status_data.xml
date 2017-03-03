@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 Sei lá
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+<openerp>
+<data>
+    <record model="hr.holidays.status" id="holiday_status_abono">
+        <field name="name">Abono</field>
+        <field name="limit" eval="False"></field>
+        <field name="color_name">red</field>
+        <field name="days_limit">0</field>
+        <field name="type_day">uteis</field>
+        <field name="message">5 abonos anuais</field>
+        <field name="need_attachment" eval="False"></field>
+        <field name="tipo">ocorrencias</field>
+    </record>
+    <record model="hr.holidays.status" id="holiday_status_historico_abono">
+        <field name="name">Histórico de Abonos</field>
+        <field name="limit" eval="False"></field>
+        <field name="color_name">blue</field>
+        <field name="days_limit">0</field>
+        <field name="type_day">uteis</field>
+        <field name="message">Abonos de anos anteriores</field>
+        <field name="need_attachment" eval="False"></field>
+        <field name="tipo">ocorrencias</field>
+        <field name="active" eval="False"></field>
+    </record>
+</data>
+</openerp>
