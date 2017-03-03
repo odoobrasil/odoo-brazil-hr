@@ -121,3 +121,4 @@ class HrContract(models.Model):
                 for periodo_aquisitivo in ultimo_controle.hr_holiday_ids:
                     if periodo_aquisitivo.type == 'add':
                         periodo_aquisitivo.number_of_days_temp = dias
+                        periodo_aquisitivo.vacation_days_temp = dias
