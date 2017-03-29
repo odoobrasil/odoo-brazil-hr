@@ -1,0 +1,13 @@
+<openerp>
+    <data>
+        <record id="ir_cron_scheduler_atualizar_credito_de_abonos" model="ir.cron">
+            <field name="name">Atualizar créditos de abonos</field>
+            <field name="interval_number">12</field>
+            <field name="interval_type">months</field>
+            <field name="numbercall">-1</field>
+            <field eval="'hr.contract'" name="model"/>
+            <field eval="(datetime.now() + timedelta(days=365)).strftime('%Y-01-01 02:00:00')" name="nextcall"/>
+            <field eval="'gerar_credito_abonos'" name="function"/>
+        </record>
+    </data>
+</openerp>

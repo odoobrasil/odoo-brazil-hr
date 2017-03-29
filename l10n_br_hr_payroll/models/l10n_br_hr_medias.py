@@ -126,14 +126,22 @@ class L10nBrHrMedias(models.Model):
         folha_obj = self.env['hr.payslip']
         domain = [
             ('date_from', '>=', data_inicio),
-            ('date_to', '<=', data_fim),
+            ('date_from', '<=', data_fim),
             ('contract_id', '=', holerite_id.contract_id.id),
             ('state', '=', 'done'),
         ]
         folhas_periodo = folha_obj.search(domain)
         folhas_periodo = folhas_periodo.sorted(key=lambda r: r.date_from)
         medias = {}
+        mes_anterior = ''
         for folha in folhas_periodo:
+            if mes_anterior and mes_anterior == folha.mes_do_ano:
+                continue
+            primeiro_dia = fields.Date.from_string(folha.date_from)
+            ultimo_dia = fields.Date.from_string(folha.date_to)
+            if (ultimo_dia - primeiro_dia).days < 15:
+                continue
+            mes_anterior = folha.mes_do_ano
             for linha in folha.line_ids:
                 if linha.salary_rule_id.category_id.code == "PROVENTO" \
                         and linha.salary_rule_id.tipo_media:
@@ -142,6 +150,7 @@ class L10nBrHrMedias(models.Model):
                             linha.salary_rule_id.id:
                                 [{
                                     'mes': MES_DO_ANO[folha.mes_do_ano-1][1],
+                                    'ano': folha.ano,
                                     'valor': linha.total,
                                     'rubrica_id': linha.salary_rule_id.id,
                                 }]
@@ -149,6 +158,7 @@ class L10nBrHrMedias(models.Model):
                     else:
                         medias[linha.salary_rule_id.id].append({
                             'mes': MES_DO_ANO[folha.mes_do_ano-1][1],
+                            'ano': folha.ano,
                             'valor': linha.total,
                             'rubrica_id': linha.salary_rule_id.id,
                         })
@@ -165,14 +175,19 @@ class L10nBrHrMedias(models.Model):
             titulo.update({'holerite_id': holerite_id.id})
             titulo.update({'linha_de_titulo': True})
             for mes in medias[rubrica]:
-                titulo.update({'mes_' + str(mes_cont): str(mes['mes']), })
+                titulo.update(
+                    {
+                        'mes_' + str(mes_cont):
+                            str(mes['mes'])[:3] + '/' + str(mes['ano']),
+                    }
+                )
                 if str(mes['mes']) in meses_titulos:
                     meses_titulos.remove(str(mes['mes']))
                 meses_titulos.append(str(mes['mes']))
                 mes_cont += 1
         linha_obj.create(titulo)
 
-        # definindo a linha
+        # definindo a linhay
         for rubrica in medias:
             vals = {}
             nome_rubrica = self.env['hr.salary.rule'].\

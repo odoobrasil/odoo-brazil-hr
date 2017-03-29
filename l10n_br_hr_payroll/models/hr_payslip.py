@@ -134,6 +134,35 @@ class HrPayslip(models.Model):
             holerite.fgts_fmt = valor.formata_valor(holerite.fgts)
             holerite.inss_fmt = valor.formata_valor(holerite.inss)
             holerite.irpf_fmt = valor.formata_valor(holerite.irpf)
+            holerite.data_extenso = data.data_por_extenso(fields.Date.today())
+            holerite.data_retorno = data.formata_data(
+                str((fields.Datetime.from_string(holerite.date_to) +
+                     relativedelta(days=1)).date()))
+            holerite.data_pagamento = \
+                str((fields.Datetime.from_string(holerite.date_from) +
+                     relativedelta(days=-2)).date())
+            # TO DO Verificar datas de feriados.
+            # A biblioteca aceita os parametros de feriados, mas a utilizacao
+            # dos feriados é diferente do odoo.
+            # Logo o método só é utilizado para antecipar em casos de finais
+            # de semana.
+            holerite.data_pagamento = data.formata_data(
+                data.dia_util_pagamento(
+                    data_vencimento=holerite.data_pagamento, antecipa=True,
+                )
+            )
+            holerite.inicio_aquisitivo_fmt = data.formata_data(
+                holerite.periodo_aquisitivo.inicio_aquisitivo
+            )
+            holerite.fim_aquisitivo_fmt = data.formata_data(
+                holerite.periodo_aquisitivo.fim_aquisitivo
+            )
+            holerite.inicio_gozo_fmt = data.formata_data(
+                holerite.date_from
+            )
+            holerite.fim_gozo_fmt = data.formata_data(
+                holerite.date_to
+            )
 
     employee_id_readonly = fields.Many2one(
         string=u'Funcionário',
@@ -306,6 +335,38 @@ class HrPayslip(models.Model):
         compute='_valor_total_folha'
     )
 
+    data_extenso = fields.Char(
+        string=u'Data por Extenso',
+        compute='_valor_total_folha'
+    )
+
+    data_retorno = fields.Char(
+        string=u'Data de Retorno',
+        compute='_valor_total_folha'
+    )
+
+    data_pagamento = fields.Char(
+        string=u'Data de Pagamento de férias',
+        compute='_valor_total_folha',
+    )
+
+    inicio_aquisitivo_fmt = fields.Char(
+        string=u'Inicio do Período Aquisitivo Formatado',
+        compute='_valor_total_folha',
+    )
+    fim_aquisitivo_fmt = fields.Char(
+        string=u'Fim do Período Aquisitivo Formatado',
+        compute='_valor_total_folha',
+    )
+    inicio_gozo_fmt = fields.Char(
+        string=u'Inicio do Período de Gozo Formatado',
+        compute='_valor_total_folha',
+    )
+    fim_gozo_fmt = fields.Char(
+        string=u'Fom do Período de Gozo Formatado',
+        compute='_valor_total_folha',
+    )
+
     medias_proventos = fields.One2many(
         string=u'Linhas das medias dos proventos',
         comodel_name='l10n_br.hr.medias',
@@ -319,19 +380,50 @@ class HrPayslip(models.Model):
         string=u"Holerite Resumo",
     )
 
-    @api.depends('contract_id')
-    @api.model
-    def _get_periodo_aquisitivo(self):
-        if self.contract_id:
-            controles_ferias = self.contract_id.vacation_control_ids
-            if controles_ferias:
-                return controles_ferias[0]
+    @api.onchange('holidays_ferias')
+    def _set_holidays_ferias(self):
+        if self.holidays_ferias:
+            self.periodo_aquisitivo = self.holidays_ferias.controle_ferias[0]
+            self.date_from = self.holidays_ferias.date_from
+            self.date_to = self.holidays_ferias.date_to
+
+    holidays_ferias = fields.Many2one(
+        comodel_name='hr.holidays',
+        string=u'Solicitação de Férias',
+        help=u'Período de férias apontado pelo funcionário em '
+             u'Pedidos de Férias',
+    )
 
     periodo_aquisitivo = fields.Many2one(
         comodel_name='hr.vacation.control',
-        default='_get_periodo_aquisitivo',
         string="Período Aquisitivo",
         domain="[('contract_id','=',contract_id)]",
+    )
+
+    @api.depends('periodo_aquisitivo')
+    def _set_periodo_aquisitivo_readonly(self):
+        for holerite in self:
+            holerite.periodo_aquisitivo_readonly = holerite.periodo_aquisitivo
+
+    periodo_aquisitivo_readonly = fields.Many2one(
+        comodel_name='hr.vacation.control',
+        string="Período Aquisitivo",
+        compute='_set_periodo_aquisitivo_readonly',
+    )
+
+    @api.depends('periodo_aquisitivo')
+    @api.model
+    def _get_saldo_periodo_aquisitivo(self):
+        for holerite in self:
+            if holerite.periodo_aquisitivo:
+                holerite.saldo_periodo_aquisitivo = \
+                    holerite.periodo_aquisitivo.saldo
+
+    saldo_periodo_aquisitivo = fields.Integer(
+        string="Saldo de dias do Periodo Aquisitivo",
+        compute='_get_saldo_periodo_aquisitivo',
+        help=u'Saldo de dias do funcionaŕio, de acordo com número de faltas'
+             u'dentro do período aquisitivo selecionado.',
         store=True,
     )
 
@@ -419,17 +511,16 @@ class HrPayslip(models.Model):
                     0.0, contract_id
                 )
             ]
-            if hr_contract.vacation_control_ids[0].saldo:
-                saldo_ferias = hr_contract.vacation_control_ids[0].saldo
-            else:
-                saldo_ferias = 0
-            result += [
-                self.get_attendances(
-                    u'Saldo de dias máximo para Férias', 8,
-                    u'SALDO_FERIAS', saldo_ferias,
-                    0.0, contract_id
-                )
-            ]
+            # se o periodo aquisitivo ja estiver definido, pega o saldo de dias
+            if self.periodo_aquisitivo:
+                saldo_ferias = self.periodo_aquisitivo.saldo
+                result += [
+                    self.get_attendances(
+                        u'Saldo de dias máximo para Férias', 8,
+                        u'SALDO_FERIAS', saldo_ferias,
+                        0.0, contract_id
+                    )
+                ]
 
             # get Dias Trabalhados
             quantidade_dias_trabalhados = \
@@ -819,6 +910,44 @@ class HrPayslip(models.Model):
             result = [value for code, value in result_dict.items()]
             return result
 
+    def atualizar_worked_days_inputs(self):
+        """
+        Atualizar os campos worked_days_line_ids e input_line_ids do holerite.
+        Com os campos de contrato, employee, date_from e date_to do holerite
+        ja setados, esse metodo exclui as variaveis base para calculo do
+        holerite e os instancia novamente atualizando os valore.
+        :return: Campos atualizados
+        """
+        hr_payslip_worked_days_obj = self.env['hr.payslip.worked_days']
+        hr_payslip_input_obj = self.env['hr.payslip.input']
+
+        for holerite in self:
+            # delete old worked days lines
+            if holerite.worked_days_line_ids:
+                for worked_day_id in holerite.worked_days_line_ids:
+                    worked_day_id.unlink()
+            # get dict com valores do worked_days_lines
+            worked_days_line_ids = self.get_worked_day_lines(
+                holerite.contract_id.id, holerite.date_from, holerite.date_to
+            )
+            # Atrelar o worked_days a payslip atual e instanciar o objeto
+            for wd_line in worked_days_line_ids:
+                wd_line['payslip_id'] = self.id
+                hr_payslip_worked_days_obj.create(wd_line)
+
+            # delete old input lines
+            if holerite.input_line_ids:
+                for input_id in holerite.input_line_ids:
+                    input_id.unlink()
+            # get dict com valores do Inputs_lines
+            input_line_ids = self.get_inputs(
+                holerite.contract_id.id, holerite.date_from, holerite.date_to
+            )
+            # Atrelar o Inputs_line a payslip atual e instanciar o objeto
+            for input_line in input_line_ids:
+                input_line['payslip_id'] = self.id
+                hr_payslip_input_obj.create(input_line)
+
     @api.multi
     def onchange_employee_id(self, date_from, date_to, contract_id):
         worked_days_obj = self.env['hr.payslip.worked_days']
@@ -870,17 +999,12 @@ class HrPayslip(models.Model):
             if record.contract_id:
                 record.employee_id = record.contract_id.employee_id
                 record.employee_id_readonly = record.employee_id
-            record._get_periodo_aquisitivo()
 
     @api.multi
     @api.onchange('mes_do_ano', 'ano')
     def buscar_datas_periodo(self):
         for record in self:
             record.set_dates()
-            if record.contract_id:
-                record.onchange_employee_id(
-                    record.date_from, record.date_to, record.contract_id.id
-                )
 
     def computar_mes_ano(self):
         for record in self:
@@ -915,14 +1039,47 @@ class HrPayslip(models.Model):
             hr_medias_ids, data_de_inicio, data_final = \
                 self.gerar_media_dos_proventos()
 
-            if not hr_medias_ids \
-                    and self.tipo_de_folha in ["decimo_terceiro", "ferias"]:
-                raise exceptions.Warning(
-                    _('Nenhum Holerite encontrado para médias nesse período!')
-                )
-
+            # Metodo pra validar se ja foram processadors todos os holerites
+            #  usados no calculo das medias
             self.validacao_holerites_anteriores(
                 data_de_inicio, data_final, self.contract_id)
+
+            if self.tipo_de_folha == 'ferias':
+                if not self.holidays_ferias:
+                    raise exceptions.Warning(
+                        _('Nenhum Pedido de Ferias encontrado!')
+                    )
+                if self.holidays_ferias.number_of_days_temp > \
+                        self.saldo_periodo_aquisitivo:
+                    raise exceptions.Warning(
+                        _('Selecionado mais dias de ferias do que o saldo do '
+                          'periodo aquisitivo selecionado!')
+                    )
+
+                # Atualizar o controle de férias com informacao de quantos dias
+                # o funcionario gozara
+                self.periodo_aquisitivo.dias_gozados += \
+                    self.holidays_ferias.number_of_days_temp
+
+                # Caso o funcionario opte por dividir as férias em dois
+                # períodos, e ainda tenha saldo para tal, uma nova linha de
+                # controle de féria é criada com base na linha atual
+                if self.periodo_aquisitivo.saldo > 0:
+                    novo_controle_ferias = self.periodo_aquisitivo.copy()
+                    novas_datas = novo_controle_ferias.\
+                        calcular_datas_aquisitivo_concessivo(
+                            novo_controle_ferias.inicio_aquisitivo
+                        )
+                    novo_controle_ferias.write(novas_datas)
+
+                # Atualizar o controle de férias com informacoes dos dias
+                # gozados pelo funcionario de acordo com a payslip de férias
+                self.periodo_aquisitivo.inicio_gozo = \
+                    self.holidays_ferias.date_from
+                self.periodo_aquisitivo.fim_gozo = \
+                    self.holidays_ferias.date_to
+
+            self.atualizar_worked_days_inputs()
         super(HrPayslip, self).compute_sheet()
         self._valor_total_folha()
         return True
@@ -936,9 +1093,10 @@ class HrPayslip(models.Model):
         :return:
         """
         folha_obj = self.env['hr.payslip']
+        data_inicio = fields.Date.from_string(data_inicio).strftime('%Y-%m-01')
         domain = [
             ('date_from', '>=', data_inicio),
-            ('date_to', '<=', data_fim),
+            ('date_from', '<=', data_fim),
             ('contract_id', '=', contrato.id),
             ('state', '=', 'done'),
         ]
@@ -947,17 +1105,22 @@ class HrPayslip(models.Model):
         folhas_sorted = folhas_periodo.sorted(key=lambda r: r.date_from)
         mes = fields.Date.from_string(data_inicio) + relativedelta(months=-1)
 
+        mes_anterior = ''
         for folha in folhas_sorted:
+            if mes_anterior and mes_anterior == folha.mes_do_ano:
+                continue
+            mes_anterior = folha.mes_do_ano
             mes = mes + relativedelta(months=1)
             if folha.mes_do_ano != mes.month:
-                raise exceptions.ValidationError(_(
-                    "Faltando Holerite confirmado do mês de %s"
-                ) % MES_DO_ANO[mes.month-1][1])
-
-        if mes.month != fields.Date.from_string(data_fim).month:
-            raise exceptions.ValidationError(_(
-                "Não foi encontrado holerite confirmado do mês de %s"
-            ) % MES_DO_ANO[mes.month-1][1])
+                raise exceptions.ValidationError(
+                    _("Faltando Holerite confirmado do mês de %s de %s") %
+                    (MES_DO_ANO[mes.month-1][1], mes.year))
+        mes_final = fields.Date.from_string(data_fim)
+        if mes.month != mes_final.month:
+            raise exceptions.ValidationError(
+                _("Não foi encontrado o último holerite do periodo "
+                  "aquisitivo, \nreferente ao mês  de %s de %s") %
+                (MES_DO_ANO[mes_final.month-1][1], mes_final.year))
 
     @api.multi
     def gerar_media_dos_proventos(self):
