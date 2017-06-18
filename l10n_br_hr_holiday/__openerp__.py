@@ -11,13 +11,14 @@
     'depends': [
         'hr_holidays',
         'l10n_br_resource',
-        'l10n_br_hr_vacation'
     ],
     'data': [
-        'views/hr_holidays.xml',
-        'views/hr_holidays_status.xml',
         'data/hr_holidays_status_data.xml',
         'security/hr_holidays_status.xml',
+        'security/ir.model.access.csv',
+        'views/hr_holidays.xml',
+        'views/hr_holidays_status.xml',
+        'views/calendar_event_view.xml',
     ],
     'demo': [
     ],

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<openerp>
+    <data>
+
+        <record model="ir.ui.view" id="hr_payslip_run_form_view">
+            <field name="name">hr.payslip.run.account.form</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="priority" eval="105"/>
+            <field name="inherit_id" ref="l10n_br_hr_payroll.hr_payslip_run_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//separator[@string='Contratos']" position="before">
+                    <group id="journal">
+                        <group>
+                            <field name="journal_id"/>
+                        </group>
+                    </group>
+                </xpath>
+                <separator string="Contratos" position="replace"/>
+                <field name="contract_id" invisible="1" position="replace"/>
+                <field name="contract_id_readonly" readonly="1" position="replace"/>
+                <separator string="Payslips" position="replace"/>
+                <field name="slip_ids" position="replace"/>
+                <xpath expr="//group[@id='journal']" position="after">
+                    <notebook>
+                        <page string="Contratos e Holerites">
+                            <separator string="Contratos"/>
+                            <field name="contract_id" invisible="1"/>
+                            <field name="contract_id_readonly" readonly="1"/>
+                            <separator string="Payslips"/>
+                            <field name="slip_ids"/>
+                        </page>
+                        <page string="Contabilização">
+                            <button type="object" name="processar_folha" string="Gerar contabilização"/>
+                            <separator string="Contas Holerite Normal" attrs="{'invisible': [('tipo_de_folha', '!=', 'normal')]}"/>
+                            <group attrs="{'invisible': [('tipo_de_folha', '!=', 'normal')]}">
+                                <group>
+                                    <field name="holerite_normal_account_debit"/>
+                                    <field name="holerite_normal_account_credit"/>
+                                </group>
+                            </group>
+                            <separator string="Contas Décimo 13º" attrs="{'invisible': [('tipo_de_folha', '!=', 'decimo_terceiro')]}"/>
+                            <group attrs="{'invisible': [('tipo_de_folha', '!=', 'decimo_terceiro')]}">
+                                <group>
+                                    <field name="decimo_13_account_debit"/>
+                                    <field name="decimo_13_account_credit"/>
+                                </group>
+                            </group>
+                            <separator string="Contas Provisão Férias" attrs="{'invisible': [('tipo_de_folha', '!=', 'provisao_ferias')]}"/>
+                            <group attrs="{'invisible': [('tipo_de_folha', '!=', 'provisao_ferias')]}">
+                                <group>
+                                    <field name="provisao_ferias_account_debit"/>
+                                    <field name="provisao_ferias_account_credit"/>
+                                </group>
+                            </group>
+                            <separator string="Contas Provisão Décimo Terceiro" attrs="{'invisible': [('tipo_de_folha', '!=', 'provisao_decimo_terceiro')]}"/>
+                            <group attrs="{'invisible': [('tipo_de_folha', '!=', 'provisao_decimo_terceiro')]}">
+                                <group>
+                                    <field name="provisao_13_account_debit"/>
+                                    <field name="provisao_13_account_credit"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="move_id" readonly="1"/>
+                            </group>
+                            <field name="move_lines_id"/>
+                        </page>
+                    </notebook>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</openerp>

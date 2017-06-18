@@ -53,7 +53,7 @@ class TestHrHoliday(common.TransactionCase):
         data_inicio = '2017-01-01 00:00:01'
         data_final = '2017-01-31 23:59:59'
 
-        faltas = self.resource_calendar.get_ocurrences(
+        faltas = self.hr_holidays.get_ocurrences(
             self.employee_hruser_id.id, data_inicio, data_final)
         quantidade_faltas = faltas['quantidade_dias_faltas_nao_remuneradas']
 
@@ -61,8 +61,11 @@ class TestHrHoliday(common.TransactionCase):
             quantidade_faltas, 1,
             'ERRO: Nao foi possivel obter faltas do Funcionario!')
         self.assertEqual(
-            faltas['faltas_nao_remuneradas'][0].name, u'Falta Injusticada',
-            'ERRO: Nao foi possivel obter faltas do Funcionario!')
+            faltas['faltas_nao_remuneradas'][0].name,
+            # u'[Employee Luiza] Absence unjustified (10/01/2017-10/01/2017)',
+            u'Falta Injusticada',
+            'ERRO: Nao foi possivel obter faltas do Funcionario!'
+        )
 
     def test_02_get_ocurrences(self):
         """ teste da funcao que obtem a quantidade de faltas de determinado
@@ -87,7 +90,7 @@ class TestHrHoliday(common.TransactionCase):
         data_inicio = '2017-01-01 00:00:01'
         data_final = '2017-01-31 23:59:59'
 
-        faltas = self.resource_calendar.get_ocurrences(
+        faltas = self.hr_holidays.get_ocurrences(
             self.employee_hruser_id.id, data_inicio, data_final)
         quantidade_faltas = faltas['quantidade_dias_faltas_nao_remuneradas']
 
@@ -96,5 +99,7 @@ class TestHrHoliday(common.TransactionCase):
             'ERRO: Nao foi possivel obter faltas do Funcionario!')
         self.assertEqual(
             faltas['faltas_nao_remuneradas'][0].name,
+            # u'[Employee Luiza] Absence unjustified (10/01/2017-12/01/2017)',
             u'Falta Injusticada de 3 dias',
-            'ERRO: Nao foi possivel obter faltas do Funcionario!')
+            'ERRO: Nao foi possivel obter faltas do Funcionario!'
+        )

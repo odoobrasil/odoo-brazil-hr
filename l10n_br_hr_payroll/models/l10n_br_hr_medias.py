@@ -74,14 +74,14 @@ class L10nBrHrMedias(models.Model):
     )
     soma = fields.Float(
         string=u'Total dos Meses',
-        compute='calcular_soma'
+        compute='_compute_calcular_soma'
     )
     meses = fields.Float(
         string=u'Meses do periodo',
     )
     media = fields.Float(
         string=u'Média',
-        compute='calcular_media',
+        compute='_compute_calcular_media',
     )
     media_texto = fields.Char(
         string=u'Média'
@@ -92,7 +92,7 @@ class L10nBrHrMedias(models.Model):
         default=False,
     )
 
-    def calcular_soma(self):
+    def _compute_calcular_soma(self):
         for linha in self:
             if not linha.linha_de_titulo:
                 linha.soma = \
@@ -103,7 +103,7 @@ class L10nBrHrMedias(models.Model):
                     float(linha.mes_9) + float(linha.mes_10) + \
                     float(linha.mes_11) + float(linha.mes_12)
 
-    def calcular_media(self):
+    def _compute_calcular_media(self):
         for linha in self:
             if not linha.linha_de_titulo:
                 if linha.meses == 0:
@@ -126,14 +126,18 @@ class L10nBrHrMedias(models.Model):
         folha_obj = self.env['hr.payslip']
         domain = [
             ('date_from', '>=', data_inicio),
-            ('date_to', '<=', data_fim),
+            ('date_from', '<', data_fim),
             ('contract_id', '=', holerite_id.contract_id.id),
             ('state', '=', 'done'),
         ]
         folhas_periodo = folha_obj.search(domain)
         folhas_periodo = folhas_periodo.sorted(key=lambda r: r.date_from)
         medias = {}
+        mes_anterior = ''
         for folha in folhas_periodo:
+            if mes_anterior and mes_anterior == folha.mes_do_ano:
+                continue
+            mes_anterior = folha.mes_do_ano
             for linha in folha.line_ids:
                 if linha.salary_rule_id.category_id.code == "PROVENTO" \
                         and linha.salary_rule_id.tipo_media:
@@ -142,6 +146,7 @@ class L10nBrHrMedias(models.Model):
                             linha.salary_rule_id.id:
                                 [{
                                     'mes': MES_DO_ANO[folha.mes_do_ano-1][1],
+                                    'ano': folha.ano,
                                     'valor': linha.total,
                                     'rubrica_id': linha.salary_rule_id.id,
                                 }]
@@ -149,6 +154,7 @@ class L10nBrHrMedias(models.Model):
                     else:
                         medias[linha.salary_rule_id.id].append({
                             'mes': MES_DO_ANO[folha.mes_do_ano-1][1],
+                            'ano': folha.ano,
                             'valor': linha.total,
                             'rubrica_id': linha.salary_rule_id.id,
                         })
@@ -165,7 +171,12 @@ class L10nBrHrMedias(models.Model):
             titulo.update({'holerite_id': holerite_id.id})
             titulo.update({'linha_de_titulo': True})
             for mes in medias[rubrica]:
-                titulo.update({'mes_' + str(mes_cont): str(mes['mes']), })
+                titulo.update(
+                    {
+                        'mes_' + str(mes_cont):
+                            str(mes['mes'])[:3] + '/' + str(mes['ano']),
+                    }
+                )
                 if str(mes['mes']) in meses_titulos:
                     meses_titulos.remove(str(mes['mes']))
                 meses_titulos.append(str(mes['mes']))

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 - KMEE
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+
+<openerp>
+    <data>
+
+        <record id="l10n_br_hr_income_tax_deductable_amount_family_2017" model="l10n_br.hr.income.tax.deductable.amount.family">
+            <field name="year">2017</field>
+            <field name="amount">189.59</field>
+        </record>
+
+        <record id="l10n_br_hr_income_tax_deductable_amount_family_2016" model="l10n_br.hr.income.tax.deductable.amount.family">
+            <field name="year">2016</field>
+            <field name="amount">189.59</field>
+        </record>
+        
+        <record id="l10n_br_hr_income_tax_deductable_amount_family_2015" model="l10n_br.hr.income.tax.deductable.amount.family">
+            <field name="year">2015</field>
+            <field name="amount">189.59</field>
+        </record>
+
+        <record id="l10n_br_hr_income_tax_deductable_amount_family_2014" model="l10n_br.hr.income.tax.deductable.amount.family">
+            <field name="year">2014</field>
+            <field name="amount">179.71</field>
+        </record>
+        
+    </data>
+</openerp>
