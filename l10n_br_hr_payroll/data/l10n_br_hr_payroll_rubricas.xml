@@ -5,48 +5,6 @@
 <openerp>
     <data>
 
-        <!--CATEGORIAS DE REGRAS DE SALARIOS-->
-        <record id="hr_payroll.REFERENCIA" model="hr.salary.rule.category">
-            <field name="name">Referência</field>
-            <field name="code">REFERENCIA</field>
-        </record>
-        <record id="hr_payroll.PROVENTO" model="hr.salary.rule.category">
-            <field name="name">Provento</field>
-            <field name="code">PROVENTO</field>
-        </record>
-        <record id="hr_payroll.BRUTO" model="hr.salary.rule.category">
-            <field name="name">Bruto</field>
-            <field name="code">BRUTO</field>
-        </record>
-        <record id="hr_payroll.DEDUCAO" model="hr.salary.rule.category">
-            <field name="name">Dedução</field>
-            <field name="code">DEDUCAO</field>
-        </record>
-        <record id="hr_payroll.LIQUIDO" model="hr.salary.rule.category">
-            <field name="name">Liquido</field>
-            <field name="code">LIQUIDO</field>
-        </record>
-        <record id="hr_payroll.INSS" model="hr.salary.rule.category">
-            <field name="name">INSS</field>
-            <field name="code">INSS</field>
-        </record>
-        <record id="hr_payroll.IRPF" model="hr.salary.rule.category">
-            <field name="name">IRPF</field>
-            <field name="code">IRPF</field>
-        </record>
-        <record id="hr_payroll.FGTS" model="hr.salary.rule.category">
-            <field name="name">FGTS</field>
-            <field name="code">FGTS</field>
-        </record>
-        <record id="hr_payroll.SEFIP" model="hr.salary.rule.category">
-            <field name="name">SEFIP</field>
-            <field name="code">SEFIP</field>
-        </record>
-        <record id="hr_payroll.FERIAS" model="hr.salary.rule.category">
-            <field name="name">FERIAS</field>
-            <field name="code">FERIAS</field>
-        </record>
-
         <!--REGRAS DE SALARIOS-->
         <record id="hr_salary_rule_BRUTO" model="hr.salary.rule">
             <field name="code">BRUTO</field>
@@ -84,14 +42,14 @@
             <field name="category_id" ref="hr_payroll.IRPF"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = CALCULAR.IRRF(BASE_IR, BASE_INSS)</field>
+            <field name="amount_python_compute">result = CALCULAR.IRRF(BASE_IRPF, INSS if 'INSS' in locals() else 0)</field>
             <field name="sequence" eval="502"/>
         </record>
 
         <record id="hr_salary_rule_BASE_INSS" model="hr.salary.rule">
             <field name="code">BASE_INSS</field>
             <field name="name">Base INSS</field>
-            <field name="category_id" ref="hr_payroll.INSS" />
+            <field name="category_id" ref="hr_payroll.REFERENCIA" />
             <field name="amount_select">code</field>
             <field name="condition_select">none</field>
             <field name="amount_python_compute">result = BASE_INSS</field>
@@ -101,10 +59,10 @@
         <record id="hr_salary_rule_BASE_IRPF" model="hr.salary.rule">
             <field name="code">BASE_IRPF</field>
             <field name="name">Base IRRF</field>
-            <field name="category_id" ref="hr_payroll.IRPF" />
+            <field name="category_id" ref="hr_payroll.REFERENCIA" />
             <field name="amount_select">code</field>
             <field name="condition_select">none</field>
-            <field name="amount_python_compute">result = BASE_IR</field>
+            <field name="amount_python_compute">result = CALCULAR.BASE_IRRF(BASE_IR, INSS if 'INSS' in locals() else 0)</field>
             <field name="sequence" eval="501" />
         </record>
 
@@ -114,14 +72,14 @@
             <field name="category_id" ref="hr_payroll.LIQUIDO" />
             <field name="amount_select">code</field>
             <field name="condition_select">none</field>
-            <field name="amount_python_compute">result = categories.DEDUCAO + INSS + IRPF</field>
+            <field name="amount_python_compute">result = categories.DEDUCAO + INSS if 'INSS' in locals() else 0 + IRPF if 'IRPF' in locals() else 0</field>
             <field name="sequence" eval="701" />
         </record>
 
         <record id="hr_salary_rule_BASE_FGTS" model="hr.salary.rule">
             <field name="code">BASE_FGTS</field>
             <field name="name">Base FGTS</field>
-            <field name="category_id" ref="hr_payroll.FGTS" />
+            <field name="category_id" ref="hr_payroll.REFERENCIA" />
             <field name="amount_select">code</field>
             <field name="condition_select">none</field>
             <field name="amount_python_compute">result = BASE_FGTS</field>
@@ -132,10 +90,9 @@
             <field name="code">FGTS</field>
             <field name="name">FGTS</field>
             <field name="category_id" ref="hr_payroll.FGTS" />
-            <field name="amount_select">percentage</field>
-            <field name="amount_percentage_base">contract.wage</field>
-            <field name="quantity">1.0</field>
-            <field name="amount_percentage">8.00</field>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = BASE_FGTS * 0.08</field>
             <field name="sequence" eval="602" />
         </record>
 
@@ -146,8 +103,9 @@
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=BASE_INSS
-                if 'BASE_INSS_13' in locals():
-                result+=BASE_INSS_13</field>
+if 'BASE_INSS_13' in locals():
+    result+=BASE_INSS_13
+            </field>
             <field name="sequence" eval="701"/>
         </record>
 
@@ -157,10 +115,11 @@
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=0
-                if 'SALARIO_FAMILIA' in locals():
-                result+=SALARIO_FAMILIA
-                if 'LICENCA_MATERNIDADE' in locals():
-                result+=LICENCA_MATERNIDADE</field>
+if 'SALARIO_FAMILIA' in locals():
+    result+=SALARIO_FAMILIA
+if 'LICENCA_MATERNIDADE' in locals():
+    result+=LICENCA_MATERNIDADE
+            </field>
             <field name="sequence" eval="702"/>
         </record>
 
@@ -170,7 +129,8 @@
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=INSS_EMPRESA_BASE
-               result_rate=RAT_FAP.total_rate</field>
+result_rate=RAT_FAP.total_rate
+            </field>
             <field name="sequence" eval="703"/>
         </record>
 
@@ -180,7 +140,8 @@
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=INSS_EMPRESA_BASE
-                result_rate=RAT_FAP.other_entities_rate</field>
+result_rate=RAT_FAP.other_entities_rate
+            </field>
             <field name="sequence" eval="704"/>
         </record>
 
@@ -190,7 +151,8 @@
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=INSS_EMPRESA_BASE
-                result_rate=RAT_FAP.rat_rate*RAT_FAP.fap_rate</field>
+result_rate=RAT_FAP.rat_rate*RAT_FAP.fap_rate
+            </field>
             <field name="sequence" eval="705"/>
         </record>
 
@@ -200,10 +162,11 @@
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=INSS_EMPRESA
-                if 'INSS_RAT_FAP' in locals():
-                result+=INSS_RAT_FAP
-                if 'INSS_OUTRAS_ENTIDADES' in locals():
-                result+=INSS_OUTRAS_ENTIDADES</field>
+if 'INSS_RAT_FAP' in locals():
+    result+=INSS_RAT_FAP
+if 'INSS_OUTRAS_ENTIDADES' in locals():
+    result+=INSS_OUTRAS_ENTIDADES
+            </field>
             <field name="sequence" eval="706"/>
         </record>
 
@@ -212,7 +175,8 @@
             <field name="name">INSS Empresa Líquido</field>
             <field name="category_id" ref="hr_payroll.SEFIP" />
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result=INSS_EMPRESA_TOTAL-INSS_DEDUCAO_PREVIDENCIARIA</field>
+            <field name="amount_python_compute">result=INSS_EMPRESA_TOTAL-INSS_DEDUCAO_PREVIDENCIARIA
+            </field>
             <field name="sequence" eval="707"/>
         </record>
 
@@ -220,11 +184,10 @@
         <record id="hr_salary_rule_base_FERIAS" model="hr.salary.rule">
             <field name="code">BASE_FERIAS</field>
             <field name="name">Base FERIAS</field>
-            <field name="category_id" ref="hr_payroll.FERIAS"/>
+            <field name="category_id" ref="hr_payroll.REFERENCIA"/>
             <field name="amount_select">code</field>
             <field name="condition_select">none</field>
-            <field name="amount_python_compute">result = MEDIAS.SALARIO.media/12.0
-result_qty = MEDIAS.SALARIO.meses
+            <field name="amount_python_compute">result = MEDIAS.SALARIO.media
             </field>
             <field name="sequence" eval="108"/>
             <field name="compoe_base_FGTS" eval="True"/>
@@ -237,11 +200,13 @@ result_qty = MEDIAS.SALARIO.meses
             <field name="category_id" ref="hr_payroll.FERIAS"/>
             <field name="amount_select">code</field>
             <field name="condition_select">none</field>
-            <field name="amount_python_compute">result = BASE_FERIAS / worked_days.SALDO_FERIAS.number_of_days
-result_qty =  worked_days.FERIAS.number_of_days
+            <field name="amount_python_compute">result = contract.wage / 30
+result_qty =  PEDIDO_FERIAS.DIAS_FERIAS
             </field>
             <field name="sequence" eval="109"/>
             <field name="compoe_base_FGTS" eval="True"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
         </record>
 
         <!--1/3 das ferias-->
@@ -253,36 +218,72 @@ result_qty =  worked_days.FERIAS.number_of_days
             <field name="condition_select">none</field>
             <field name="amount_python_compute">result = FERIAS / 3.0
             </field>
-            <field name="sequence" eval="109"/>
+            <field name="sequence" eval="110"/>
             <field name="compoe_base_FGTS" eval="True"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
         </record>
 
         <!--Abono Pecuniário-->
         <record id="hr_salary_rule_ABONO_PECUNIARIO" model="hr.salary.rule">
             <field name="code">ABONO_PECUNIARIO</field>
             <field name="name">Rubrica do Abono Pecuniario das FERIAS</field>
-            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="category_id" ref="hr_payroll.FERIAS"/>
             <field name="amount_select">code</field>
             <field name="condition_select">python</field>
-            <field name="condition_python">result = worked_days.FERIAS.number_of_days > 0 </field>
-            <field name="amount_python_compute">result = worked_days.ABONO_PECUNIARIO.number_of_days * contract.wage / 30</field>
-            <field name="sequence" eval="7"/>
-            <field name="compoe_base_FGTS" eval="True"/>
+            <field name="condition_python">result = PEDIDO_FERIAS.DIAS_ABONO > 0 </field>
+            <field name="amount_python_compute">result =  contract.wage / 30
+result_qty =  PEDIDO_FERIAS.DIAS_ABONO
+            </field>
+            <field name="sequence" eval="111"/>
+            <field name="compoe_base_FGTS" eval="False"/>
+            <field name="compoe_base_INSS" eval="False"/>
+            <field name="compoe_base_IR" eval="False"/>
         </record>
 
-        <!--Abono Pecuniário-->
+        <!-- 1/3 Abono Pecuniário-->
         <record id="hr_salary_rule_1/3_ABONO_PECUNIARIO" model="hr.salary.rule">
             <field name="code">1/3_ABONO_PECUNIARIO</field>
             <field name="name">Rubrica do 1/3 Abono Pecuniario</field>
-            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="category_id" ref="hr_payroll.FERIAS"/>
             <field name="amount_select">code</field>
             <field name="condition_select">python</field>
-            <field name="condition_python">result = worked_days.FERIAS.number_of_days > 0 </field>
-            <field name="amount_python_compute">result = ABONO_PECUNIARIO / 3 </field>
-            <field name="sequence" eval="8"/>
-            <field name="compoe_base_FGTS" eval="True"/>
+            <field name="condition_python">result = PEDIDO_FERIAS.DIAS_ABONO > 0 </field>
+            <field name="amount_python_compute">result = ABONO_PECUNIARIO / 3.0
+            </field>
+            <field name="sequence" eval="112"/>
+            <field name="compoe_base_FGTS" eval="False"/>
+            <field name="compoe_base_INSS" eval="False"/>
+            <field name="compoe_base_IR" eval="False"/>
         </record>
 
+        <!-- Liquido Férias-->
+        <record id="hr_salary_rule_liquido_ferias" model="hr.salary.rule">
+            <field name="code">LIQUIDO_FERIAS</field>
+            <field name="name">Liquido Férias</field>
+            <field name="category_id" ref="hr_payroll.REFERENCIA"/>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = categories.FERIAS - INSS - IRPF
+            </field>
+            <field name="sequence" eval="700"/>
+            <field name="compoe_base_FGTS" eval="False"/>
+            <field name="compoe_base_INSS" eval="False"/>
+        </record>
+
+        <!-- Pagamento de férias no Holerite Mensal-->
+        <record id="hr_salary_rule_pagamento_ferias" model="hr.salary.rule">
+            <field name="code">PAGAMENTO_FERIAS</field>
+            <field name="name">Pagamento Antecipado de Férias</field>
+            <field name="category_id" ref="hr_payroll.DEDUCAO"/>
+            <field name="condition_select">python</field>
+            <field name="condition_python">result = worked_days.FERIAS.number_of_days > 0 and PAGAR_FERIAS</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = CALCULAR.rubrica_anterior_total(code='LIQUIDO_FERIAS', tipo_de_folha='ferias')
+            </field>
+            <field name="sequence" eval="999"/>
+            <field name="compoe_base_FGTS" eval="False"/>
+            <field name="compoe_base_INSS" eval="False"/>
+        </record>
 
         <!--Vale alimentação / vale refeição-->
         <record id="hr_salary_rule_VA_VR" model="hr.salary.rule">
@@ -309,6 +310,7 @@ else:
             <field name="compoe_base_INSS" eval="True"/>
             <field name="compoe_base_IR" eval="True"/>
             <field name="compoe_base_FGTS" eval="True"/>
+            <field name="tipo_media">valor</field>
         </record>
 
         <record id="hr_salary_rule_HONORARIO_PRESIDENTE" model="hr.salary.rule">
@@ -395,6 +397,20 @@ else:
             <field name="sequence" eval="102"/>
         </record>
 
+        <record id="hr_salary_rule_REMBOLSO_AUXILIO_CRECHE" model="hr.salary.rule">
+            <field name="code">REMBOLSO_AUXILIO_CRECHE</field>
+            <field name="name">Reembolso Auxilio Creche</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">if MEDIAS:
+    result = CALCULAR.get_specific_rubric_value(rubrica.id, MEDIAS)
+else:
+    result = CALCULAR.get_specific_rubric_value(rubrica.id)
+            </field>
+            <field name="sequence" eval="102"/>
+        </record>
+
         <record id="hr_salary_rule_ADIANTAMENTO_13" model="hr.salary.rule">
             <field name="code">ADIANTAMENTO_13</field>
             <field name="name">Adiantamento 13 Salario</field>
@@ -435,97 +451,169 @@ result_qty = MEDIAS.SALARIO.meses
             <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-
-        <!--ESTRUTURAS DE SALARIOS-->
-
-        <!--Estrutura de salario para ferias-->
-        <record id="hr_salary_structure_FERIAS" model="hr.payroll.structure">
-            <field name="code">FERIAS</field>
-            <field name="name">Férias</field>
-            <field eval="[(6, 0, [ref('hr_salary_rule_base_FERIAS'), ref('hr_salary_rule_FERIAS'), ref('hr_salary_rule_1/3_FERIAS')])]" name="rule_ids"/>
-            <field name="company_id" ref="base.main_company"/>
-            <field name="parent_id" eval="False" />
+        <record id="hr_salary_rule_PROPORCIONAL_13" model="hr.salary.rule">
+            <field name="code">PROP13</field>
+            <field name="name">Proporcional 13 Salário</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_PROPORCIONAL('decimo_terceiro')</field>
+            <field name="sequence" eval="180"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_BASE_INSS_IRPF" model="hr.payroll.structure">
-            <field name="code">BASE_INSS_IRPF</field>
-            <field name="name">Base para INSS e IRPF</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_BASE_INSS'), ref('hr_salary_rule_BASE_IRPF'), ref('hr_salary_rule_INSS'), ref('hr_salary_rule_IRPF'), ref('hr_salary_rule_TOTAL_DESCONTOS'), ref('hr_salary_rule_BRUTO'), ref('hr_salary_rule_LIQUIDO')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="False" />
+        <!-- Pagamento de férias no Holerite Mensal-->
+        <record id="hr_salary_rule_PAGAMENTO_MES_ANTERIOR" model="hr.salary.rule">
+            <field name="code">PAGAMENTO_MES_ANTERIOR</field>
+            <field name="name">Pagamento bruto do mês anterior</field>
+            <field name="category_id" ref="hr_payroll.REFERENCIA"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = CALCULAR.rubrica_anterior_total(code='BRUTO', mes=payslip.mes_do_ano-1, tipo_de_folha='normal')
+            </field>
+            <field name="sequence" eval="801"/>
+            <field name="compoe_base_FGTS" eval="False"/>
+            <field name="compoe_base_INSS" eval="False"/>
         </record>
 
-        <record id="hr_salary_structure_BASE_FGTS" model="hr.payroll.structure">
-            <field name="code">BASE_FGTS</field>
-            <field name="name">Base para FGTS</field>
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_INSS_IRPF')" />
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_BASE_FGTS'), ref('hr_salary_rule_FGTS')])]" />
-            <field name="company_id" ref="base.main_company" />
+        <record id="hr_salary_rule_PROPORCIONAL_FERIAS" model="hr.salary.rule">
+            <field name="code">PROP_FERIAS</field>
+            <field name="name">Proporcional Férias</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_PROPORCIONAL('ferias')</field>
+            <field name="sequence" eval="182"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_BASE_INSS_IRPF_13" model="hr.payroll.structure">
-            <field name="code">BASE_INSS_IRPF_13</field>
-            <field name="name">Base para INSS e IRPF de 13</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_BASE_INSS_13'), ref('hr_salary_rule_BASE_IRPF_13'), ref('hr_salary_rule_INSS'), ref('hr_salary_rule_IRPF'), ref('hr_salary_rule_TOTAL_DESCONTOS'), ref('hr_salary_rule_BRUTO'), ref('hr_salary_rule_LIQUIDO')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="False" />
+        <record id="hr_salary_rule_PROPORCIONAL_UM_TERCO_FERIAS" model="hr.salary.rule">
+            <field name="code">PROP_1/3_FERIAS</field>
+            <field name="name">Proporcional 1/3 de Férias</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_PROPORCIONAL('ferias', True)</field>
+            <field name="sequence" eval="183"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_BASE_FGTS_13" model="hr.payroll.structure">
-            <field name="code">BASE_FGTS_13</field>
-            <field name="name">Base para FGTS de 13</field>
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_INSS_IRPF_13')" />
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_BASE_FGTS_13'), ref('hr_salary_rule_FGTS')])]" />
-            <field name="company_id" ref="base.main_company" />
+        <record id="hr_salary_rule_FERIAS_VENCIDAS" model="hr.salary.rule">
+            <field name="code">FERIAS_VENCIDAS</field>
+            <field name="name">Férias Vencidas</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_PROPORCIONAL('ferias', ferias_vencida=True)</field>
+            <field name="sequence" eval="184"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_FUNCAO_COMISSIONADA" model="hr.payroll.structure">
-            <field name="code">FUNCAO_COMISSIONADA</field>
-            <field name="name">Função Comissionada</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_FUNCAO_COMISSIONADA')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_FGTS')" />
+        <record id="hr_salary_rule_FERIAS_VENCIDAS_UM_TERCO" model="hr.salary.rule">
+            <field name="code">FERIAS_VENCIDAS_1/3</field>
+            <field name="name">Férias Vencidas 1/3</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_PROPORCIONAL('ferias', True, ferias_vencida=True)</field>
+            <field name="sequence" eval="185"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_HONORARIO_PRESIDENTE" model="hr.payroll.structure">
-            <field name="code">HONORARIO_PRESIDENTE</field>
-            <field name="name">Honorario Presidente</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_HONORARIO_PRESIDENTE')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_FGTS')" />
+        <record id="hr_salary_rule_AVISO_PREVIO_INDENIZADO" model="hr.salary.rule">
+            <field name="code">AVISO_PREV_IND</field>
+            <field name="name">Aviso Prévio Indenizado</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_PROPORCIONAL('aviso_previo')</field>
+            <field name="sequence" eval="186"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_HONORARIO_DIRETORIA" model="hr.payroll.structure">
-            <field name="code">HONORARIO_DIRETORIA</field>
-            <field name="name">Honorario Diretoria</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_HONORARIO_DIRETORIA')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_INSS_IRPF')" />
+        <record id="hr_salary_rule_PROPORCIONAL_13_AVISO_PREVIO_INDENIZADO" model="hr.salary.rule">
+            <field name="code">PROP_13_AVISO_PREVIO</field>
+            <field name="name">Proporcional 13 Salário Aviso Prévio</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_MEDIA_PROVENTO('decimo_terceiro')
+result_qty = round(DIAS_AVISO_PREVIO/30.0)</field>
+            <field name="sequence" eval="187"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_HONORARIO_CONSELHO" model="hr.payroll.structure">
-            <field name="code">HONORARIO_CONSELHO</field>
-            <field name="name">Honorario Conselho</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_HONORARIO_CONSELHO')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_INSS_IRPF')" />
+        <record id="hr_salary_rule_PROPORCIONAL_FERIAS_AVISO_PREVIO_INDENIZADO" model="hr.salary.rule">
+            <field name="code">PROP_FERIAS_AVISO_PREVIO</field>
+            <field name="name">Proporcional Férias Aviso Prévio</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <!--<field name="amount_python_compute">result = CALCULAR.BUSCAR_VALOR_MEDIA_PROVENTO('ferias')-->
+<!--result_qty = round(DIAS_AVISO_PREVIO/30.0)</field>-->
+            <field name="amount_python_compute">result = AVISO_PREV_IND/12
+result_qty = round(DIAS_AVISO_PREVIO/30.0)</field>
+            <field name="sequence" eval="188"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_PRIMEIRA_PARCELA_13" model="hr.payroll.structure">
-            <field name="code">PRIMEIRA_PARCELA_13</field>
-            <field name="name">Primeira Parcela 13 Salário</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_PRIMEIRA_PARCELA_13')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_FGTS_13')" />
+        <record id="hr_salary_rule_PROPORCIONAL_UM_TERCO_FERIAS_AVISO_PREVIO_INDENIZADO" model="hr.salary.rule">
+            <field name="code">PROP_1/3_FERIAS_AVISO_PREVIO</field>
+            <field name="name">Proporcional 1/3 Férias Aviso Prévio</field>
+            <field name="category_id" ref="hr_payroll.PROVENTO"/>
+            <field name="amount_select">code</field>
+            <field name="condition_select">none</field>
+            <field name="amount_python_compute">result = PROP_FERIAS_AVISO_PREVIO/3</field>
+            <field name="sequence" eval="189"/>
+            <field name="compoe_base_INSS" eval="True"/>
+            <field name="compoe_base_IR" eval="True"/>
+            <field name="compoe_base_FGTS" eval="True"/>
         </record>
 
-        <record id="hr_salary_structure_SEGUNDA_PARCELA_13" model="hr.payroll.structure">
-            <field name="code">SEGUNDA_PARCELA_13</field>
-            <field name="name">Segunda Parcela 13 Salário</field>
-            <field name="rule_ids" eval="[(6, 0, [ref('hr_salary_rule_ADIANTAMENTO_13'), ref('hr_salary_rule_SEGUNDA_PARCELA_13')])]" />
-            <field name="company_id" ref="base.main_company" />
-            <field name="parent_id" eval="ref('hr_salary_structure_BASE_FGTS_13')" />
+         <record id="hr_salary_rule_DESCONTO_LIGACOES" model="hr.salary.rule">
+             <field name="code">DESCONTO_LIGACOES_TELEFONICAS</field>
+             <field name="name">Desconto Ligações Telefônicas</field>
+             <field name="category_id" ref="hr_payroll.DEDUCAO"/>
+             <field name="condition_select">python</field>
+             <field name="condition_python">result=payslip.tipo_de_folha in ('normal','rescisao')</field>
+             <field name="amount_select">code</field>
+             <field name="amount_python_compute">result = CALCULAR.get_specific_rubric_value(rubrica.id)</field>
+             <field name="sequence" eval="188"/>
+             <field name="compoe_base_INSS" eval="False"/>
+             <field name="compoe_base_IR" eval="False"/>
+             <field name="compoe_base_FGTS" eval="False"/>
         </record>
+
+        <record id="hr_salary_rule_CONTRIBUICAO_SINDICAL" model="hr.salary.rule">
+             <field name="code">CONTRIBUICAO_SINDICAL</field>
+             <field name="name">Contribuição Sindical</field>
+             <field name="category_id" ref="hr_payroll.DEDUCAO"/>
+             <field name="condition_select">python</field>
+             <field name="condition_python">result=payslip.tipo_de_folha in ('normal','rescisao')</field>
+             <field name="amount_select">code</field>
+             <field name="amount_python_compute">result = contract.wage/30</field>
+             <field name="sequence" eval="187"/>
+             <field name="compoe_base_INSS" eval="False"/>
+             <field name="compoe_base_IR" eval="False"/>
+             <field name="compoe_base_FGTS" eval="False"/>
+        </record>
+
 
     </data>
 </openerp>

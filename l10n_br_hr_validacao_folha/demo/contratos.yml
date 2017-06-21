@@ -1,0 +1,253 @@
+-
+    Criar Contratos
+-
+################################################################################
+    Criar Contrato da JENNIFER 
+-
+  !record {model: hr.contract, id: hr_contract_jennifer}:
+    name: 'Contrato do JENNIFER'
+    employee_id: 'hr_employee_jennifer'
+    date_start: '2014-01-02'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 10936.46
+-
+    Criar Rubricas Especificas do Contrato Do JENNIFER
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_jennifer_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2014-01-02'
+    specific_quantity: 1
+    specific_amount: 400
+    contract_id: hr_contract_jennifer
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_jennifer_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2014-01-02'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_jennifer
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_jennifer_creche}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_AUXILIO_CRECHE
+    date_start: '2014-01-02'
+    specific_quantity: 1
+    specific_amount: 370.71
+    contract_id: hr_contract_jennifer
+###############################################################################
+-
+    Criar Contrato do CAROLINA
+-
+  !record {model: hr.contract, id: hr_contract_carolina}:
+    name: 'Contrato da CAROLINA'
+    employee_id: 'hr_employee_carolina'
+    date_start: '2014-10-01'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 14413.96
+-
+    Criar Rubricas Especificas do Contrato da CAROLINA
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_carolina_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2014-10-01'
+    specific_quantity: 1
+    specific_amount: 400
+    contract_id: hr_contract_carolina
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_carolina_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2014-10-01'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_carolina
+###############################################################################
+-
+    Criar Contrato da BELA
+-
+  !record {model: hr.contract, id: hr_contract_bela}:
+    name: 'Contrato da BELA'
+    employee_id: 'hr_employee_bela'
+    date_start: '2013-10-15'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 29483.08
+-
+    Criar Rubricas Especificas do Contrato da BELA
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_bela_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2013-10-15'
+    specific_quantity: 1
+    specific_amount: 274.05
+    contract_id: hr_contract_bela
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_bela_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2013-10-15'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_bela
+###############################################################################
+-
+    Criar Contrato da PAULA
+-
+  !record {model: hr.contract, id: hr_contract_paula}:
+    name: 'Contrato da PAULA'
+    employee_id: 'hr_employee_paula'
+    date_start: '2014-10-01'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 10936.46
+-
+    Criar Rubricas Especificas do Contrato da PAULA
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_paula_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2014-10-01'
+    specific_quantity: 1
+    specific_amount: 277.02
+    contract_id: hr_contract_paula
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_paula_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2014-10-01'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_paula
+###############################################################################
+-
+    Criar Contrato da RHEILA
+-
+  !record {model: hr.contract, id: hr_contract_rheila}:
+    name: 'Contrato da RHEILA'
+    employee_id: 'hr_employee_rheila'
+    date_start: '2014-03-24'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 14413.96
+-
+    Criar Rubricas Especificas do Contrato da RHEILA
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_rheila_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2014-03-24'
+    specific_quantity: 1
+    specific_amount: 288.67
+    contract_id: hr_contract_rheila
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_rheila_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2014-03-24'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_rheila
+###############################################################################
+-
+    Criar Contrato da LARA
+-
+  !record {model: hr.contract, id: hr_contract_lara}:
+    name: 'Contrato da LARA'
+    employee_id: 'hr_employee_lara'
+    date_start: '2014-09-08'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 7372.28
+-
+    Criar Rubricas Especificas do Contrato da RHEILA
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_lara_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2014-09-08'
+    specific_quantity: 1
+    specific_amount: 303.23
+    contract_id: hr_contract_lara
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_lara_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2014-09-08'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_lara
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_lara_creche}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_AUXILIO_CRECHE
+    date_start: '2014-09-08'
+    specific_quantity: 1
+    specific_amount: 370.71
+    contract_id: hr_contract_lara
+
+###############################################################################
+-
+    Criar Contrato da MALU
+-
+  !record {model: hr.contract, id: hr_contract_malu}:
+    name: 'Contrato da MALU'
+    employee_id: 'hr_employee_malu'
+    date_start: '2014-01-06'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 14413.96
+-
+    Criar Rubricas Especificas do Contrato da MALU
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_malu_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2014-01-06'
+    specific_quantity: 1
+    specific_amount: 400.00
+    contract_id: hr_contract_malu
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_malu_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2014-01-06'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_malu
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_malu_creche}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_AUXILIO_CRECHE
+    date_start: '2014-01-06'
+    specific_quantity: 1
+    specific_amount: 317.14
+    contract_id: hr_contract_malu
+
+###############################################################################
+-
+    Criar Contrato da INGRID
+-
+  !record {model: hr.contract, id: hr_contract_ingrid}:
+    name: 'Contrato da INGRID'
+    employee_id: 'hr_employee_ingrid'
+    date_start: '2013-11-01'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 10936.46
+-
+    Criar Rubricas Especificas do Contrato da INGRID
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_ingrid_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2013-11-01'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_ingrid
+
+###############################################################################
+-
+    Criar Contrato da TINA
+-
+  !record {model: hr.contract, id: hr_contract_tina}:
+    name: 'Contrato da TINA'
+    employee_id: 'hr_employee_tina'
+    date_start: '2013-11-01'
+    struct_id: l10n_br_hr_payroll.hr_salary_structure_FUNCAO_COMISSIONADA
+    wage: 10936.46
+-
+    Criar Rubricas Especificas do Contrato da TINA
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_tina_va_vr}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_VA_VR
+    date_start: '2013-11-01'
+    specific_quantity: 1
+    specific_amount: 6.04
+    contract_id: hr_contract_tina
+-
+  !record {model: hr.contract.salary.rule, id: rubrica_especifica_tina_saude}:
+    rule_id: l10n_br_hr_payroll.hr_salary_rule_REMBOLSO_PLANO_SAUDE
+    date_start: '2013-11-01'
+    specific_quantity: 1
+    specific_amount: 207.02
+    contract_id: hr_contract_tina
