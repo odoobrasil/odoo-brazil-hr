@@ -12,7 +12,7 @@ except ImportError:
     _logger.info('Cannot import pybrasil')
 
 import base64
-
+import logging
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
@@ -21,6 +21,13 @@ from openerp.addons.l10n_br_hr_arquivos_governo.models.arquivo_caged \
     import Caged
 from openerp.addons.l10n_br_hr_payroll.models.hr_payslip import MES_DO_ANO
 from openerp.exceptions import ValidationError, Warning
+
+_logger = logging.getLogger(__name__)
+
+try:
+    from pybrasil import telefone
+except ImportError:
+    _logger.info('Cannot import pybrasil')
 
 
 class HrCaged(models.Model):
