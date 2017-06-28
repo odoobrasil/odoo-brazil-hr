@@ -246,10 +246,12 @@ class L10nBrSefip(models.Model):
         sefip.indic_recolhimento_fgts = self.recolhimento_fgts
         sefip.modalidade_arq = self.modalidade_arquivo
         sefip.data_recolhimento_fgts = fields.Datetime.from_string(
-                self.data_recolhimento_fgts).strftime('%d%m%Y')
+            self.data_recolhimento_fgts).strftime('%d%m%Y') \
+            if self.data_recolhimento_fgts else ''
         sefip.indic_recolh_ps = self.recolhimento_gps
         sefip.data_recolh_ps = fields.Datetime.from_string(
-                self.data_recolhimento_gps).strftime('%d%m%Y')
+            self.data_recolhimento_gps).strftime('%d%m%Y') \
+            if self.data_recolhimento_fgts else ''
         sefip.tipo_inscr_fornec = (
             '1' if self.company_id.supplier_partner_id.is_company else '3')
         sefip.inscr_fornec = self.company_id.supplier_partner_id.cnpj_cpf
@@ -429,14 +431,14 @@ class L10nBrSefip(models.Model):
         sefip.serie_ctps = folha.employee_id.ctps_series
         # sefip.data_de_opcao =
         sefip.data_de_nascimento = folha.employee_id.birthday
-        sefip.trabalhador_cbo = folha.job_id.cbo_id.code
+        sefip.trabalhador_cbo = folha.contract_id.job_id.cbo_id.code
         # sefip.trabalhador_remun_sem_13 = holerite.salario-total
         # sefip.trabalhador_remun_13 =
         # sefip.trabalhador_classe_contrib =
         # ONDE SE ENCONTRAM INFORMAÇÕES REFERENTES A INSALUBRIDADE, DEVERIAM ESTAR NO CAMPO job_id?
         #sefip.trabalhador_ocorrencia =
         # sefip.trabalhador_valor_desc_segurado =
-        sefip.trabalhador_remun_base_calc_contribuicao_previdenciaria = folha.wage
+        # sefip.trabalhador_remun_base_calc_contribuicao_previdenciaria = folha.wage
         # sefip.trabalhador_base_calc_13_previdencia_competencia =
         # sefip.trabalhador_base_calc_13_previdencia_GPS =
 
