@@ -9,8 +9,7 @@ from ..constantes_rh import (MESES, MODALIDADE_ARQUIVO, CODIGO_RECOLHIMENTO,
 import logging
 import re
 
-from openerp.addons.l10n_br_hr_arquivos_governo.models.arquivo_sefip import \
-    SEFIP
+from .arquivo_sefip import SEFIP
 
 _logger = logging.getLogger(__name__)
 
@@ -143,15 +142,14 @@ class L10nBrSefip(models.Model):
     @api.multi
     def gerar_sefip(self):
         sefip = SEFIP()
-        self.sefip = ''
-        self.sefip += self._preencher_registro_00(sefip)
-        self.sefip += self._registro_10()
+        self._preencher_registro_00(sefip)
+        # self._preencher_registro_10(sefip)
         for folha in self.env['hr.payslip'].search([
             ('mes_do_ano', '=', self.mes),
             ('ano', '=', self.ano)
         ]).sorted(key=lambda folha: folha.employee_id.pis_pasep):
-            self.sefip += self._registro_30(folha)
-        self.sefip += self._registro_90()
+            self._preencher_registro_30(sefip, folha)
+        self.sefip = sefip._gerar_arquivo_SEFIP()
 
     # def _registro_00(self):
     #     _validar = self._validar
@@ -234,12 +232,12 @@ class L10nBrSefip(models.Model):
         sefip.inscr_resp = self.responsible_user_id.cnpj_cpf
         sefip.nome_resp = self.responsible_user_id.parent_id.name
         sefip.nome_contato = self.responsible_user_id.name
-        sefip.arq_logradouro = self.responsible_user_id.street + ' ' + \
-                               self.responsible_user_id.number + ' ' + \
-                               self.responsible_user_id.street2
+        sefip.arq_logradouro = self.responsible_user_id.street or '' + ' ' + \
+                               self.responsible_user_id.number or ''+ ' ' + \
+                               self.responsible_user_id.street2 or ''
         sefip.arq_bairro = self.responsible_user_id.district
         sefip.arq_cep = self.responsible_user_id.zip
-        sefip.arq_cidade = self.responsible_user_id.l10n_br_city.name
+        sefip.arq_cidade = self.responsible_user_id.l10n_br_city_id.name
         sefip.arq_uf = self.responsible_user_id.state_id.code
         sefip.tel_contato = self.responsible_user_id.phone
         sefip.internet_contato = self.responsible_user_id.website
@@ -247,9 +245,11 @@ class L10nBrSefip(models.Model):
         sefip.cod_recolhimento = self.codigo_recolhimento
         sefip.indic_recolhimento_fgts = self.recolhimento_fgts
         sefip.modalidade_arq = self.modalidade_arquivo
-        sefip.data_recolhimento_fgts = self.data_recolhimento_fgts
+        sefip.data_recolhimento_fgts = fields.Datetime.from_string(
+                self.data_recolhimento_fgts).strftime('%d%m%Y')
         sefip.indic_recolh_ps = self.recolhimento_gps
-        sefip.data_recolh_ps = self.data_recolhimento_gps
+        sefip.data_recolh_ps = fields.Datetime.from_string(
+                self.data_recolhimento_gps).strftime('%d%m%Y')
         sefip.tipo_inscr_fornec = (
             '1' if self.company_id.supplier_partner_id.is_company else '3')
         sefip.inscr_fornec = self.company_id.supplier_partner_id.cnpj_cpf
@@ -319,9 +319,9 @@ class L10nBrSefip(models.Model):
         # sefip.tipo_inscr_empresa = self.
         sefip.inscr_empresa = self.company_id.cnpj_cei
         sefip.emp_nome_razao_social = self.company_id.name
-        sefip.emp_logradouro = self.company_id.street + ' ' + \
-                               self.company_id.number + ' ' + \
-                               self.company_id.street2
+        sefip.emp_logradouro = self.company_id.street or '' + ' ' + \
+                               self.company_id.number or '' + ' ' + \
+                               self.company_id.street2 or ''
         sefip.emp_bairro = self.company_id.district
         sefip.emp_cep = self.company_id.zip
         sefip.emp_cidade = self.company_id.l10n_br_city.name
@@ -414,33 +414,33 @@ class L10nBrSefip(models.Model):
     #     return sefip
 
 
-    def _preencher_registro_30(self, sefip, contract):
-        # sefip.tipo_inscr_empresa =
-        sefip.inscr_empresa = self.company_id.cnpj_cei
-        # sefip.tipo_inscr_tomador = self.
-        # sefip.inscr_tomador = self
-        sefip.pis_pasep_ci = contract.employee_id.pis_pasep
-        sefip.data_admissao = contract.date_start
+    def _preencher_registro_30(self, sefip, folha):
+        sefip.tipo_inscr_empresa = '1'
+        sefip.inscr_empresa = self.company_id.cnpj_cpf
+        sefip.tipo_inscr_tomador = ' '
+        sefip.inscr_tomador = ' '*14
+        sefip.pis_pasep_ci = folha.employee_id.pis_pasep
+        sefip.data_admissao = folha.contract_id.date_start
         sefip.categoria_trabalhador = SEFIP_CATEGORIA_TRABALHADOR.get(
-            contract.categoria, '01')
-        sefip.nome_trabalhador = contract.employee_id.name
-        sefip.matricula_trabalhador = contract.employee_id.registration
-        sefip.num_ctps = contract.employee_id.ctps
-        sefip.serie_ctps = contract.employee_id.ctps_series
+            folha.contract_id.categoria, '01')
+        sefip.nome_trabalhador = folha.employee_id.name
+        sefip.matricula_trabalhador = folha.employee_id.registration
+        sefip.num_ctps = folha.employee_id.ctps
+        sefip.serie_ctps = folha.employee_id.ctps_series
         # sefip.data_de_opcao =
-        sefip.data_de_nascimento = contract.employee_id.birthday
-        sefip.trabalhador_cbo = contract.job_id.cbo_id.code
+        sefip.data_de_nascimento = folha.employee_id.birthday
+        sefip.trabalhador_cbo = folha.job_id.cbo_id.code
         # sefip.trabalhador_remun_sem_13 = holerite.salario-total
         # sefip.trabalhador_remun_13 =
         # sefip.trabalhador_classe_contrib =
         # ONDE SE ENCONTRAM INFORMAÇÕES REFERENTES A INSALUBRIDADE, DEVERIAM ESTAR NO CAMPO job_id?
         #sefip.trabalhador_ocorrencia =
         # sefip.trabalhador_valor_desc_segurado =
-        sefip.trabalhador_remun_base_calc_contribuicao_previdenciaria = contract.wage
+        sefip.trabalhador_remun_base_calc_contribuicao_previdenciaria = folha.wage
         # sefip.trabalhador_base_calc_13_previdencia_competencia =
         # sefip.trabalhador_base_calc_13_previdencia_GPS =
 
-    # def _registro_90(self):
+    # def _preencher_registro_90(self):
     #     sefip = '90'
     #     sefip += '9'*51
     #     sefip += ' '*306
