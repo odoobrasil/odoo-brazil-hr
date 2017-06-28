@@ -2,15 +2,6 @@
 # Copyright 2017 KMEE - Hendrix Costa <hendrix.costa@kmee.com.br>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import logging
-
-_logger = logging.getLogger(__name__)
-
-try:
-    from pybrasil import telefone
-except ImportError:
-    _logger.info('Cannot import pybrasil')
-
 import base64
 import logging
 from datetime import datetime
@@ -146,7 +137,12 @@ class HrCaged(models.Model):
         caged.A_cep = company_id.zip
         caged.A_uf = company_id.state_id.code
         # Telefone e DDD a partir do phone do res_company
-        ddd, numero = telefone.telefone.separa_fone(company_id.phone)
+        if company_id.phone:
+            ddd, numero = telefone.telefone.separa_fone(company_id.phone)
+        else:
+            ddd = '  '
+            numero = '        '
+
         caged.A_ddd = ddd
         caged.A_telefone = numero
         caged.A_ramal = ''

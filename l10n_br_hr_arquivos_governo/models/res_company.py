@@ -22,9 +22,10 @@ class ResCompany(models.Model):
 
     @api.constrains('phone')
     def _check_phone_br(self):
-        if not telefone.valida_fone(self.phone):
-            raise exceptions.Warning(
-                _('Número do Telefone Inválido'))
+        if self.phone:
+            if not telefone.valida_fone(self.phone):
+                raise exceptions.Warning(
+                    _('Número do Telefone Inválido'))
 
     supplier_partner_id = fields.Many2one(
         string='Fornecedor do sistema', comodel_name='res.partner'

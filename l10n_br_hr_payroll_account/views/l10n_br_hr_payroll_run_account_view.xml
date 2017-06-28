@@ -33,10 +33,12 @@
                             <button type="object" name="processar_folha" string="Gerar contabilização"/>
                             <separator string="Contas Holerite Normal" attrs="{'invisible': [('tipo_de_folha', '!=', 'normal')]}"/>
                             <group attrs="{'invisible': [('tipo_de_folha', '!=', 'normal')]}">
+<!--
                                 <group>
                                     <field name="holerite_normal_account_debit"/>
                                     <field name="holerite_normal_account_credit"/>
                                 </group>
+-->
                             </group>
                             <separator string="Contas Décimo 13º" attrs="{'invisible': [('tipo_de_folha', '!=', 'decimo_terceiro')]}"/>
                             <group attrs="{'invisible': [('tipo_de_folha', '!=', 'decimo_terceiro')]}">
