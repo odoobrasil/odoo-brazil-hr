@@ -833,7 +833,7 @@ result = rules.NET  &gt;  categories.NET * 0.10</field>
 		<record id="l10n_br_hr_payroll.hr_salary_rule_base_FERIAS" model="hr.salary.rule">
 			<field name="code">BASE_FERIAS</field>
 			<field name="name">Base FERIAS</field>
-			<field name="active">True</field>
+			<field name="active" eval="False" />
 			<field name="sequence">108.0</field>
 			<field name="category_id" ref="hr_payroll.REFERENCIA"/>
 			<field name="condition_select">none</field>
@@ -955,7 +955,7 @@ result = rules.NET  &gt;  categories.NET * 0.10</field>
             </field>
 			<field name="custom_amount_python_compute">result = CALCULAR.get_specific_rubric_value(rubrica.id)
 
-if 'FERIAS' in locals() and payslip.tipo_de_calculo == 'ferias':
+if 'FERIAS' in locals() and payslip.tipo_de_folha == 'ferias':
     result = FERIAS / 3.0
 elif not result:
     result = contract.wage / 3.0 / 12</field>
@@ -1061,7 +1061,7 @@ result_qty =  PEDIDO_FERIAS.DIAS_ABONO
 			<field name="code">LIQUIDO_FERIAS</field>
 			<field name="name">Liquido Férias</field>
 			<field name="active">True</field>
-			<field name="sequence">700.0</field>
+			<field name="sequence">799.0</field>
 			<field name="category_id" ref="hr_payroll.REFERENCIA"/>
 			<field name="condition_select">none</field>
 			<field name="condition_python">
