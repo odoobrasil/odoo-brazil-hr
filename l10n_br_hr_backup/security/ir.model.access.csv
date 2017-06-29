@@ -1,0 +1,2 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+access_hr_backup,access_hr_backup,model_hr_backup,,1,0,0,0

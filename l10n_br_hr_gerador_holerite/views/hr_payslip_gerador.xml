@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record model="ir.ui.view" id="l10n_br_hr_payslip_generator_form">
+            <field name="name">l10n_br.hr.payslip.gerador.form</field>
+            <field name="model">hr.payslip.generator</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                    <group col="4" colspan="4">
+                        <field name="contract_id" required="1" />
+                        <newline/>
+                        <field name="mes_do_ano" required="1"/>
+                        <newline/>
+                        <field name="ano" required="1"/>
+                        <newline/>
+                        <button name="gerar_holerites" string="Gerar Holerites" type="object"/>
+                    </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="l10n_br_hr_payslip_generator_action" model="ir.actions.act_window">
+            <field name="name">Action Generator Payslip</field>
+            <field name="res_model">hr.payslip.generator</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+        </record>
+
+
+        <menuitem
+            action="l10n_br_hr_payslip_generator_action"
+            id="menu_l10n_br_hr_payslip_generator"
+            name="Gerador de 12 Holerites"
+            parent="l10n_br_hr_payroll.menu_hr_root_payroll_simulacao"
+            sequence="43"
+            />
+
+    </data>
+</openerp>
