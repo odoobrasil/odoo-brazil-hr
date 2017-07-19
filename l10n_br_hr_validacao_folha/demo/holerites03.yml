@@ -1,0 +1,21 @@
+-
+    Criar Holerite de MARÇO
+-
+    Criar Holerite do INGRID de MARÇO do 2017
+-
+  !python {model: hr.contract, id: hr_contract_ingrid}: |
+    self.atribuir_ferias('2016-11-03', '2016-11-14', 12, 0)
+-
+  !record {model: hr.payslip, id: hr_payslip_ingrid}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_ingrid'
+    employee_id: 'hr_employee_ingrid'
+    mes_do_ano: 03
+    ano: 2017
+-
+  !python {model: hr.payslip, id: hr_payslip_ingrid}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+    if round(self.total_folha, 2) != 	4667.56:
+        raise ValidationError("Calculo da folha da INGRID Incorreto")
