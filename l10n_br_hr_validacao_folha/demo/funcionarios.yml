@@ -1,0 +1,88 @@
+-
+    Criar funcionarios de Demonstracao
+-
+  !record {model: hr.employee, id: hr_employee_jennifer}:
+    name: 'JENNIFER '
+    have_dependent: true
+-
+  !record {model: hr.employee.dependent, id: hr_employee_jennifer_dep_1}:
+    dependent_name: 'DEPENDENTE 1 JENNIFER '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_jennifer
+    dependent_verification: True
+-
+  !record {model: hr.employee.dependent, id: hr_employee_jennifer_dep_2}:
+    dependent_name: 'DEPENDENTE 2 JENNIFER '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_jennifer
+    dependent_verification: True
+-
+  !record {model: hr.employee.dependent, id: hr_employee_jennifer_dep_3}:
+    dependent_name: 'DEPENDENTE 3 JENNIFER '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_jennifer
+    dependent_verification: True
+-
+  !record {model: hr.employee, id: hr_employee_carolina}:
+    name: 'CAROLINA'
+-
+  !record {model: hr.employee, id: hr_employee_bela}:
+    name: 'BELA'
+-
+  !record {model: hr.employee, id: hr_employee_micheli}:
+    name: 'MICHELI'
+-
+  !record {model: hr.employee, id: hr_employee_paula}:
+    name: 'PAULA'
+-
+  !record {model: hr.employee, id: hr_employee_rheila}:
+    name: 'RHEILA'
+-
+  !record {model: hr.employee, id: hr_employee_lara}:
+    name: 'LARA'
+    have_dependent: true
+-
+  !record {model: hr.employee.dependent, id: hr_employee_lara_dep_1}:
+    dependent_name: 'DEPENDENTE 1 LARA '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_lara
+    dependent_verification: True
+-
+  !record {model: hr.employee, id: hr_employee_malu}:
+    name: 'MALU'
+    have_dependent: true
+-
+  !record {model: hr.employee.dependent, id: hr_employee_malu_dep_1}:
+    dependent_name: 'DEPENDENTE 1 MALU '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_malu
+    dependent_verification: True
+-
+  !record {model: hr.employee.dependent, id: hr_employee_malu_dep_2}:
+    dependent_name: 'DEPENDENTE 2 MALU '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_malu
+    dependent_verification: True
+-
+  !record {model: hr.employee, id: hr_employee_ingrid}:
+    name: 'INGRID'
+-
+  !record {model: hr.employee, id: hr_employee_tina}:
+    name: 'TINA'
+-
+  !record {model: hr.employee, id: hr_employee_linda}:
+    name: 'LINDA'
+    have_dependent: true
+-
+  !record {model: hr.employee.dependent, id: hr_employee_linda_dep_1}:
+    dependent_name: 'DEPENDENTE 1 LINDA '
+    dependent_dob: '2010-01-01'
+    dependent_type_id: l10n_br_hr.l10n_br_dependent_3
+    employee_id: hr_employee_linda
+    dependent_verification: True
