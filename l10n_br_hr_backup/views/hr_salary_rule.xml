@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Copyright 2017 Hendrix Costa - KMEE
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+<openerp>
+    <data>
+
+        <record model="ir.ui.view"
+                id="l10n_br_hr_backup_hr_salary_rule_form_view">
+            <field name="name">hr.salaray.rule.form (in l10n_br_hr_backup)
+            </field>
+            <field name="model">hr.salary.rule</field>
+            <field name="inherit_id" ref="hr_payroll.hr_salary_rule_form"/>
+            <field name="arch" type="xml">
+                <page position="after" string="Description">
+                    <page string="XML" groups="base.group_no_one">
+                        <group string="Generate XML">
+                            <field name="generate_xml"/>
+                        </group>
+                    </page>
+                </page>
+            </field>
+        </record>
+
+    </data>
+</openerp>

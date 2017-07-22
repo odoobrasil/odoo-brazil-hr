@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<openerp>
+    <data>
+
+         <record id="view_hr_payslip_form" model="ir.ui.view">
+            <field name="name">hr.payslip.form</field>
+            <field name="model">hr.payslip</field>
+            <field name="inherit_id" ref="l10n_br_hr_payroll.hr_payslip_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Contabilização" attrs="{'invisible': [('is_simulacao', '=', True)]}">
+                        <button type="object" name="processar_folha" string="Gerar contabilização"/>
+                        <group>
+                            <field name="journal_id"/>
+                        </group>
+                        <group>
+                            <field name="move_id"/>
+                        </group>
+                        <group>
+                            <field name="move_lines_id"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="l10n_br_hr_salary_rule_form_inherit" model="ir.ui.view">
+            <field name="name">l10n.br.hr.salary.rule.form.inherit</field>
+                <field name="model">hr.salary.rule</field>
+                <field name="inherit_id" ref="hr_payroll.hr_salary_rule_form"/>
+                <field name="arch" type="xml">
+                <xpath expr="/form/notebook/page[@string='Child Rules']" position="after">
+                    <page string="Accounting">
+                        <separator string="Contas Contábeis para Cálculo de Folha Normal"/>
+                        <group>
+                            <group>
+                                <field name="holerite_normal_account_debit"/>
+                                <field name="holerite_normal_account_credit"/>
+                            </group>
+                        </group>
+                        <separator string="Contas Contábeis para Cálculo de Férias"/>
+                        <group>
+                            <group>
+                                <field name="ferias_account_debit"/>
+                                <field name="ferias_account_credit"/>
+                            </group>
+                        </group>
+                        <separator string="Contas Contábeis para Cálculo de 13º (Segunda Parcela)"/>
+                        <group>
+                            <group>
+                                <field name="decimo_13_account_debit"/>
+                                <field name="decimo_13_account_credit"/>
+                            </group>
+                        </group>
+                        <separator string="Contas Contábeis para Cálculo de Rescisão"/>
+                        <group>
+                            <group>
+                                <field name="rescisao_account_debit"/>
+                                <field name="rescisao_account_credit"/>
+                            </group>
+                        </group>
+                        <separator string="Contas Contábeis para Cálculo de Provisão de Férias"/>
+                        <group>
+                            <group>
+                                <field name="provisao_ferias_account_debit"/>
+                                <field name="provisao_ferias_account_credit"/>
+                            </group>
+                        </group>
+                        <separator string="Contas Contábeis para Cálculo de Provisão de 13º"/>
+                        <group>
+                            <group>
+                                <field name="provisao_13_account_debit"/>
+                                <field name="provisao_13_account_credit"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</openerp>

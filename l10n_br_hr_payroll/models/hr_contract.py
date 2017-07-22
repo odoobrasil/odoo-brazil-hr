@@ -11,8 +11,21 @@ class HrContract(models.Model):
     _inherit = 'hr.contract'
     _rec_name = 'nome_contrato'
 
+    codigo_contrato = fields.Char(
+        string='Codigo de Identificacao',
+        required=True,
+        default="/",
+        readonly=True
+    )
+
+    @api.model
+    def create(self, vals):
+        if vals.get('codigo_contrato', '/') == '/':
+            vals['codigo_contrato'] = self.env['ir.sequence'].get(self._name)
+            return super(HrContract, self).create(vals)
+
     @api.depends('employee_id', 'date_start')
-    def _nome_contrato(self):
+    def _compute_nome_contrato(self):
         for contrato in self:
             nome = contrato.employee_id.name
             inicio_contrato = contrato.date_start
@@ -32,14 +45,17 @@ class HrContract(models.Model):
                     fim_contrato = "- %s" % fim_contrato
             else:
                 fim_contrato = ''
-            matricula = contrato.name
+            matricula = contrato.codigo_contrato
             nome_contrato = '[%s] %s - %s %s' % (matricula,
                                                  nome, inicio_contrato,
                                                  fim_contrato)
-            contrato.nome_contrato = nome_contrato
+            contrato.nome_contrato = nome_contrato if nome else ''
 
-    nome_contrato = fields.Char(default="[mat] nome - inicio - fim",
-                                compute="_nome_contrato", store=True)
+    nome_contrato = fields.Char(
+        default="[mat] nome - inicio - fim",
+        compute="_compute_nome_contrato",
+        store=True
+    )
 
     @api.multi
     def _buscar_salario_vigente_periodo(self, data_inicio, data_fim):
@@ -59,23 +75,21 @@ class HrContract(models.Model):
     def _salario_dia(self, data_inicio, data_fim):
         if data_inicio >= self.date_start and \
                 (data_fim <= self.date_end or not self.date_end):
-            return self.wage/30
+            return self.wage / 30
         else:
             return self._buscar_salario_vigente_periodo(
-                data_inicio, data_fim)/30
+                data_inicio, data_fim) / 30
 
     @api.multi
     def _salario_hora(self, data_inicio, data_fim):
         if data_inicio >= self.date_start and \
                 (data_fim <= self.date_end or not self.date_end):
-            return self.wage/(
-                220 if not self.monthly_hours else self.monthly_hours
-            )
+            return self.wage / (
+                220 if not self.monthly_hours else self.monthly_hours)
         else:
-            return self._buscar_salario_vigente_periodo(
-                data_inicio, data_fim)/(
-                220 if not self.monthly_hours else self.monthly_hours
-            )
+            wage = self._buscar_salario_vigente_periodo(data_inicio, data_fim)
+            hours_total = 220 if not self.monthly_hours else self.monthly_hours
+            return wage / hours_total
 
     @api.multi
     def _salario_mes(self, data_inicio, data_fim):
@@ -89,6 +103,7 @@ class HrContract(models.Model):
         comodel_name='hr.contract.salary.rule',
         inverse_name='contract_id',
         string=u"Rúbricas específicas",
+        ondelete='cascade',
     )
     change_salary_ids = fields.One2many(
         comodel_name='l10n_br_hr.contract.change',
@@ -134,6 +149,7 @@ class HrContract(models.Model):
         comodel_name='res.company',
         string='Empresa',
         required=True,
+        default=lambda self: self.env.user.company_id or '',
     )
 
     # Admissão
@@ -187,9 +203,9 @@ class HrContract(models.Model):
     )
 
     # Lotação
-    departamento_lotacao = fields.Selection(
-        selection=[],
-        string="Departamento/lotação"
+    departamento_lotacao = fields.Many2one(
+        string="Departamento/lotação",
+        comodel_name='hr.department'
     )
 
     lotacao_cliente_fornecedor = fields.Selection(
@@ -368,10 +384,6 @@ class HrHoliday(models.Model):
 
     valor_inss = fields.Float(
         string="Valor INSS"
-    )
-
-    contrato_id = fields.Many2one(
-        comodel_name='hr.contract',
     )
 
 
