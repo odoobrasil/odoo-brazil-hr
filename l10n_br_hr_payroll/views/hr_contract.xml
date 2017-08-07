@@ -10,8 +10,14 @@
         <field name="model">hr.contract</field>
         <field name="inherit_id" ref="l10n_br_hr_contract.l10n_br_hr_contract_view_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//label[@for='name']" position="before">
+                <h1><field name="codigo_contrato"/></h1>
+            </xpath>
             <field name="employee_id" position="after">
                 <field name="company_id"/>
+            </field>
+            <field name="struct_id" position="after">
+                <field name="conta_bancaria_id"/>
             </field>
             <xpath expr="//page[@string='Resignation']" position="after">
                     <page string="Rubricas específicas">
@@ -23,6 +29,7 @@
                                 <field name="specific_quantity"/>
                                 <field name="specific_percentual"/>
                                 <field name="specific_amount"/>
+                                <field name="partner_id"/>
                             </tree>
                         </field>
                     </page>
@@ -141,18 +148,32 @@
                     </field>
                 </page>
                 <!--Aba Afastamentos-->
-                <page string="Afastamentos">
+                <page string="Ocorrências e Férias">
                     <field name="afastamento_ids">
                         <tree>
-                            <field name="contrato_id" string="Contrato"/>
-                            <field name="rubrica"/>
-                            <field name="periodo"/>
-                            <field name="valor_inss"/>
+                            <field name="holiday_status_id"/>
+                            <field name="data_inicio"/>
+                            <field name="data_fim"/>
+                            <field name="state"/>
                         </tree>
                     </field>
                 </page>
             </xpath>
         </field>
     </record>
+
+     <record model="ir.ui.view" id="hr_contract_tree_view">
+        <field name="name">hr.contract.tree (in l10n_br_hr_payroll)</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_tree"/>
+        <field name="arch" type="xml">
+             <field name="name" position="before">
+                 <field name="codigo_contrato"/>
+                 <field name="nome_contrato"/>
+             </field>
+        </field>
+    </record>
+
+
 </data>
 </openerp>
