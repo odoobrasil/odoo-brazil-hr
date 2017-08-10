@@ -7,23 +7,27 @@ from datetime import datetime
 from openerp import api, fields, models
 
 MES_DO_ANO = [
-    (1, u'Jan'),
-    (2, u'Fev'),
-    (3, u'Mar'),
-    (4, u'Abr'),
-    (5, u'Mai'),
-    (6, u'Jun'),
-    (7, u'Jul'),
-    (8, u'Ago'),
-    (9, u'Set'),
-    (10, u'Out'),
-    (11, u'Nov'),
-    (12, u'Dez'),
+    (1, u'Janeiro'),
+    (2, u'Fevereiro'),
+    (3, u'Março'),
+    (4, u'Abril'),
+    (5, u'Maio'),
+    (6, u'Junho'),
+    (7, u'Julho'),
+    (8, u'Agosto'),
+    (9, u'Setembro'),
+    (10, u'Outubro'),
+    (11, u'Novembro'),
+    (12, u'Dezembro'),
+    (13, u'13º Salário')
 ]
 
 TIPO_DE_FOLHA = [
     ('normal', u'Folha normal'),
-    ('decimo_terceiro', u'Décimo terceiro (13º)'),
+    ('adiantamento_13', u'13º Salário - Adiantamento'),
+    ('decimo_terceiro', u'13º Salário'),
+    ('provisao_ferias', u'Provisão de Férias'),
+    ('provisao_decimo_terceiro', u'Provisão de Décimo Terceiro (13º)'),
 ]
 
 
@@ -60,102 +64,106 @@ class HrPayslipRun(models.Model):
     company_id = fields.Many2one(
         comodel_name='res.company',
         string='Empresa',
+        default=lambda self: self.env.user.company_id or '',
     )
 
-    @api.multi
-    @api.onchange('mes_do_ano')
+    @api.onchange('tipo_de_folha')
+    def fixa_decimo_terceiro(self):
+        if self.tipo_de_folha == 'adiantamento_13' and self.mes_do_ano == 12:
+            self.tipo_de_folha = 'decimo_terceiro'
+            self.mes_do_ano = 13
+        else:
+            if self.tipo_de_folha == 'decimo_terceiro':
+                self.mes_do_ano = 13
+            elif self.mes_do_ano == 13:
+                self.mes_do_ano = datetime.now().month
+
+    @api.onchange('mes_do_ano', 'ano')
     def buscar_datas_periodo(self):
-        for record in self:
-            record.set_dates()
+        if not self.mes_do_ano:
+            self.mes_do_ano = datetime.now().month
 
-    def set_dates(self):
-        for record in self:
-            ultimo_dia_do_mes = str(
-                self.env['resource.calendar'].get_ultimo_dia_mes(
-                    record.mes_do_ano, record.ano))
+        if self.tipo_de_folha == 'adiantamento_13' and self.mes_do_ano == 12:
+            self.tipo_de_folha = 'decimo_terceiro'
+            self.mes_do_ano = 13
 
-            primeiro_dia_do_mes = str(
-                datetime.strptime(str(record.mes_do_ano) + '-' +
-                                  str(record.ano), '%m-%Y'))
+        mes = self.mes_do_ano
+        if mes > 12:
+            mes = 12
+            self.tipo_de_folha = 'decimo_terceiro'
+        elif self.tipo_de_folha == 'decimo_terceiro':
+            self.tipo_de_folha = 'normal'
 
-            record.date_start = primeiro_dia_do_mes
-            record.date_end = ultimo_dia_do_mes
+        ultimo_dia_do_mes = str(
+            self.env['resource.calendar'].get_ultimo_dia_mes(
+                mes, self.ano))
+
+        primeiro_dia_do_mes = str(
+            datetime.strptime(str(mes) + '-' +
+                              str(self.ano), '%m-%Y'))
+
+        self.date_start = primeiro_dia_do_mes
+        self.date_end = ultimo_dia_do_mes
+
 
     @api.multi
     def verificar_holerites_gerados(self):
-        contract_id = self.env['hr.contract'].search(
-            [
-                ('company_id', '=', self.company_id.id)
+        dominio_contratos = [
+                ('date_start', '<', lote.date_end),
+                ('company_id', '=', lote.company_id.id),
             ]
-        )
-        contratos = [contrato.id for contrato in contract_id]
-        payslip_obj = self.env['hr.payslip']
-        payslips = payslip_obj.search(
-            [
+        if self.tipo_de_folha != 'normal':
+            dominio_contratos += [
+                ('categoria', 'not in', ['721', '722']),
+            ]
+        for lote in self:
+            contracts_id = self.env['hr.contract'].search(dominio_contratos)
+
+            payslips = self.env['hr.payslip'].search([
                 ('tipo_de_folha', '=', self.tipo_de_folha),
                 ('date_from', '>=', self.date_start),
                 ('date_to', '<=', self.date_end),
-                ('contract_id', 'in', contratos)
-            ]
-        )
-        contratos_holerites_gerados = []
-        for payslip in payslips:
-            if payslip.contract_id.id not in contratos_holerites_gerados:
-                contratos_holerites_gerados.append(payslip.contract_id.id)
-        contratos_sem_holerite = [
-            contrato.id for contrato in contract_id
-            if contrato.id not in contratos_holerites_gerados
-            ]
-        if self.id:
-            self.write(
-                {
-                    'contract_id': [(6, 0, contratos_sem_holerite)],
-                    'contract_id_readonly': [(6, 0, contratos_sem_holerite)],
-                }
-            )
-        else:
-            self.contract_id = contratos_sem_holerite
-            self.contract_id_readonly = contratos_sem_holerite
+                ('contract_id', 'in', contracts_id.ids)
+            ])
+
+            contratos_com_holerites = []
+            for payslip in payslips:
+                if payslip.contract_id.id not in contratos_com_holerites:
+                    contratos_com_holerites.append(payslip.contract_id.id)
+
+            contratos_sem_holerite = [
+                contrato.id for contrato in contracts_id
+                if contrato.id not in contratos_com_holerites]
+
+            lote.write({
+                'contract_id': [(6, 0, contratos_sem_holerite)],
+                'contract_id_readonly': [(6, 0, contratos_sem_holerite)],
+            })
 
     @api.multi
     def gerar_holerites(self):
+        self.verificar_holerites_gerados()
         for contrato in self.contract_id:
             try:
                 payslip_obj = self.env['hr.payslip']
-                payslip = payslip_obj.create(
-                    {
-                        'contract_id': contrato.id,
-                        'mes_do_ano': self.mes_do_ano,
-                        'ano': self.ano,
-                        'date_from': self.date_start,
-                        'date_to': self.date_end,
-                        'employee_id': contrato.employee_id.id,
-                        'tipo_de_folha': self.tipo_de_folha,
-                        'payslip_run_id': self.id,
-                    }
-                )
-                payslip.set_employee_id()
-                payslip.onchange_employee_id(
-                    self.date_start,
-                    self.date_end,
-                    contrato.id
-                )
-                worked_days_line_ids = payslip.get_worked_day_lines(
-                    contrato.id, self.date_start, self.date_end
-                )
-                input_line_ids = payslip.get_inputs(
-                    contrato.id, self.date_start, self.date_end
-                )
-                worked_days_obj = self.env['hr.payslip.worked_days']
-                input_obj = self.env['hr.payslip.input']
-                for worked_day in worked_days_line_ids:
-                    worked_day.update({'payslip_id': payslip.id})
-                    worked_days_obj.create(worked_day)
-                for input_id in input_line_ids:
-                    input_id.update({'payslip_id': payslip.id})
-                    input_obj.create(input_id)
+                payslip = payslip_obj.create({
+                    'contract_id': contrato.id,
+                    'mes_do_ano': self.mes_do_ano,
+                    'ano': self.ano,
+                    'employee_id': contrato.employee_id.id,
+                    'tipo_de_folha': self.tipo_de_folha,
+                    'payslip_run_id': self.id,
+                })
+                payslip._compute_set_dates()
                 payslip.compute_sheet()
             except:
-                self._cr.rollback()
-                pass
+                payslip.unlink()
+                continue
         self.verificar_holerites_gerados()
+
+    @api.multi
+    def close_payslip_run(self):
+        for lote in self:
+            for holerite in lote.slip_ids:
+                holerite.hr_verify_sheet()
+        super(HrPayslipRun, self).close_payslip_run()

@@ -1,3 +1,5 @@
 server-tools https://github.com/OCA/server-tools.git
 account-fiscal-rule https://github.com/OCA/account-fiscal-rule.git
 l10n-brazil https://github.com/OCA/l10n-brazil.git
+bank-payment https://github.com/OCA/bank-payment.git
+odoo-brazil-banking https://github.com/kmee/odoo-brazil-banking.git fix/refactory_module_payment_mode
