@@ -74,14 +74,14 @@ class L10nBrHrMedias(models.Model):
     )
     soma = fields.Float(
         string=u'Total dos Meses',
-        compute='calcular_soma'
+        compute='_compute_calcular_soma'
     )
     meses = fields.Float(
         string=u'Meses do periodo',
     )
     media = fields.Float(
         string=u'Média',
-        compute='calcular_media',
+        compute='_compute_calcular_media',
     )
     media_texto = fields.Char(
         string=u'Média'
@@ -92,7 +92,7 @@ class L10nBrHrMedias(models.Model):
         default=False,
     )
 
-    def calcular_soma(self):
+    def _compute_calcular_soma(self):
         for linha in self:
             if not linha.linha_de_titulo:
                 linha.soma = \
@@ -103,13 +103,26 @@ class L10nBrHrMedias(models.Model):
                     float(linha.mes_9) + float(linha.mes_10) + \
                     float(linha.mes_11) + float(linha.mes_12)
 
-    def calcular_media(self):
+    def _compute_calcular_media(self):
         for linha in self:
             if not linha.linha_de_titulo:
                 if linha.meses == 0:
                     linha.media = 123
                 else:
-                    linha.media = linha.soma/linha.meses
+                    linha.media = linha.soma / linha.meses
+
+    @api.multi
+    def _completar_colunas_vazias_linha_media(self, vals):
+        """
+        Função responsável por completar com 0's os meses que não possuem
+        o provento no holerite.
+        :param vals:
+        :return: vals
+        """
+        for i in range(1, 13):
+            if not vals.get('mes_' + str(i)):
+                vals.update({'mes_' + str(i): '0.00'})
+        return vals
 
     @api.multi
     def gerar_media_dos_proventos(self, data_inicio, data_fim, holerite_id):
@@ -128,29 +141,41 @@ class L10nBrHrMedias(models.Model):
             ('date_from', '>=', data_inicio),
             ('date_to', '<=', data_fim),
             ('contract_id', '=', holerite_id.contract_id.id),
+            ('tipo_de_folha', '=', 'normal'),
             ('state', '=', 'done'),
         ]
         folhas_periodo = folha_obj.search(domain)
         folhas_periodo = folhas_periodo.sorted(key=lambda r: r.date_from)
+
         medias = {}
+        mes_anterior = ''
         for folha in folhas_periodo:
+
+            if mes_anterior and mes_anterior == folha.mes_do_ano:
+                continue
+            mes_anterior = folha.mes_do_ano
             for linha in folha.line_ids:
-                if linha.salary_rule_id.category_id.code == "PROVENTO" \
-                        and linha.salary_rule_id.tipo_media:
+                if linha.salary_rule_id.category_id.code in \
+                        ["PROVENTO", "FERIAS"] and \
+                        linha.salary_rule_id.tipo_media:
                     if not medias.get(linha.salary_rule_id.id):
                         medias.update({
                             linha.salary_rule_id.id:
                                 [{
-                                    'mes': MES_DO_ANO[folha.mes_do_ano-1][1],
+                                    'mes': MES_DO_ANO[folha.mes_do_ano - 1][1],
+                                    'ano': folha.ano,
                                     'valor': linha.total,
                                     'rubrica_id': linha.salary_rule_id.id,
+                                    'codigo': linha.salary_rule_id.code,
                                 }]
                         })
                     else:
                         medias[linha.salary_rule_id.id].append({
-                            'mes': MES_DO_ANO[folha.mes_do_ano-1][1],
+                            'mes': MES_DO_ANO[folha.mes_do_ano - 1][1],
+                            'ano': folha.ano,
                             'valor': linha.total,
                             'rubrica_id': linha.salary_rule_id.id,
+                            'codigo': linha.salary_rule_id.code,
                         })
 
         linha_obj = self.env['l10n_br.hr.medias']
@@ -159,13 +184,25 @@ class L10nBrHrMedias(models.Model):
         meses_titulos = []
 
         # definindo titulo da visao tree
+        id_rubrica_salario = 0
         for rubrica in medias:
-            mes_cont = 1
-            titulo.update({'meses': len(medias[rubrica])})
-            titulo.update({'holerite_id': holerite_id.id})
-            titulo.update({'linha_de_titulo': True})
-            for mes in medias[rubrica]:
-                titulo.update({'mes_' + str(mes_cont): str(mes['mes']), })
+            if medias[rubrica][0]['codigo'] == 'SALARIO':
+                id_rubrica_salario = rubrica
+                break
+
+        mes_cont = 1
+        #titulo.update({'meses': len(medias[id_rubrica_salario])})
+        titulo.update({'meses': len(medias)})
+        titulo.update({'holerite_id': holerite_id.id})
+        titulo.update({'linha_de_titulo': True})
+        if medias != {}:
+            for mes in medias[id_rubrica_salario]:
+                titulo.update(
+                    {
+                        'mes_' + str(mes_cont):
+                            str(mes['mes'])[:3] + '/' + str(mes['ano']),
+                    }
+                )
                 if str(mes['mes']) in meses_titulos:
                     meses_titulos.remove(str(mes['mes']))
                 meses_titulos.append(str(mes['mes']))
@@ -173,25 +210,39 @@ class L10nBrHrMedias(models.Model):
         linha_obj.create(titulo)
 
         # definindo a linha
+        vals = {}
         for rubrica in medias:
-            vals = {}
-            nome_rubrica = self.env['hr.salary.rule'].\
-                browse(rubrica).display_name
-            vals.update({'nome_rubrica': nome_rubrica})
-            vals.update({'meses': len(medias[rubrica])})
-            vals.update({'holerite_id': holerite_id.id})
-            vals.update({'rubrica_id': rubrica})
+            if not vals:
+                nome_rubrica = self.env['hr.salary.rule'].\
+                    browse(rubrica).display_name
+                vals.update({'nome_rubrica': nome_rubrica})
+                vals.update({'meses': len(medias[rubrica])})
+                vals.update({'holerite_id': holerite_id.id})
+                vals.update({'rubrica_id': rubrica})
 
-            for mes in medias[rubrica]:
-                mes_cont = 1
-                for mes_titulo in meses_titulos:
-                    # se o mes em questão for igual mes do titulo
-                    if mes_titulo == mes['mes']:
-                        vals.update({
-                            'mes_' + str(mes_cont): str(mes['valor']),
-                        })
-                        break
-                    mes_cont += 1
-            hr_medias_ids.append(linha_obj.create(vals))
+                for mes in medias[rubrica]:
+                    mes_cont = 1
+                    for mes_titulo in meses_titulos:
+                        # se o mes em questão for igual mes do titulo
+                        if mes_titulo == mes['mes']:
+                            vals.update({
+                                'mes_' + str(mes_cont): str(mes['valor']),
+                            })
+                            break
+                        mes_cont += 1
+            else:
+                for mes in medias[rubrica]:
+                    mes_cont = 1
+                    for mes_titulo in meses_titulos:
+                        # se o mes em questão for igual mes do titulo
+                        if mes_titulo == mes['mes']:
+                            vals['mes_' + str(mes_cont)] = str(
+                                float(vals['mes_' + str(mes_cont)]) +
+                                mes['valor']
+                            )
+                            break
+                        mes_cont += 1
+        vals = self._completar_colunas_vazias_linha_media(vals)
+        hr_medias_ids.append(linha_obj.create(vals))
 
         return hr_medias_ids
