@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Copyright 2017 Hendrix Costa - KMEE
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+<openerp>
+    <data>
+        <record model="ir.ui.view" id="view_l10n_br_hr_backup">
+            <field name="name">hr.backup</field>
+            <field name="model">hr.backup</field>
+            <field name="arch" type="xml">
+                <form string="HR Backup">
+                    <group>
+                        <h1>Backup das Regras de Salario</h1>
+                    </group>
+                    <footer>
+                        <button name="gerar_backup"
+                                string="Confirm Backup" type="object"
+                                class="oe_highlight"
+                        />
+                        <button string="Return" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_hr_backup">
+            <field name="name">HR Backup</field>
+            <field name="res_model">hr.backup</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_l10n_br_hr_backup"/>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_hr_backup"
+                  parent="hr.menu_hr_configuration"
+                  action="action_hr_backup"
+                  sequence="3"/>
+
+    </data>
+</openerp>

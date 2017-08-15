@@ -1,0 +1,123 @@
+-
+    Criar Holerite da Outubro
+-
+    Criar Holerite do JENNIFER de Outubro do 2016
+-
+  !python {model: hr.contract, id: hr_contract_jennifer}: |
+    self.atribuir_ferias('2016-10-13', '2016-10-22', 10, 0)
+-
+  !record {model: hr.payslip, id: hr_payslip_jennifer}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_jennifer'
+    employee_id: 'hr_employee_jennifer'
+    mes_do_ano: 10
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_jennifer}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+#    if round(self.total_folha, 2) != 7050.15:
+#        raise ValidationError("Calculo da folha da JENNIFER Incorreto")
+
+###############################################################################
+-
+    Criar Holerite da BELA de Outubro do 2016
+-
+  !python {model: hr.contract, id: hr_contract_bela}: |
+    self.atribuir_ferias('2016-10-03', '2016-10-11', 9, 2)
+-
+  !record {model: hr.payslip, id: hr_payslip_bela}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_bela'
+    employee_id: 'hr_employee_bela'
+    mes_do_ano: 10
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_bela}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+#    if round(self.total_folha, 2) != 16100.03:
+#        raise ValidationError("Calculo da folha da BELA Incorreto")
+
+###############################################################################
+-
+    Criar Holerite da PAULA de Outubro do 2016
+-
+  !python {model: hr.contract, id: hr_contract_paula}: |
+    self.atribuir_ferias('2016-10-03', '2016-10-14', 12, 0)
+-
+  !record {model: hr.payslip, id: hr_payslip_paula}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_paula'
+    employee_id: 'hr_employee_paula'
+    mes_do_ano: 10
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_paula}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+
+#    if round(self.total_folha, 2) != 5897.70:
+#        raise ValidationError("Calculo da folha da PAULA Incorreto")
+
+###############################################################################
+-
+    Criar Holerite da RHEILA de Outubro do 2016
+-
+  !record {model: hr.payslip, id: hr_payslip_rheila}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_rheila'
+    employee_id: 'hr_employee_rheila'
+    mes_do_ano: 10
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_rheila}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+
+#    if round(self.total_folha, 2) != 11188.22:
+#        raise ValidationError("Calculo da folha da RHEILA Incorreto")
+
+###############################################################################
+-
+    Criar Holerite da INGRID de Outubro do 2016
+-
+  !record {model: hr.payslip, id: hr_payslip_ingrid}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_ingrid'
+    employee_id: 'hr_employee_ingrid'
+    mes_do_ano: 10
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_ingrid}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+
+#    if round(self.total_folha, 2) != 8378.37:
+#        raise ValidationError("Calculo da folha da RHEILA Incorreto")
+###############################################################################
+#-
+#    Criar Holerite da TINA de Outubro do 2016
+#-
+#  !python {model: hr.contract, id: hr_contract_tina}: |
+#    self.atribuir_ferias('2016-10-24', '2016-11-12', 20, 0)
+#-
+#  !record {model: hr.payslip, id: hr_payslip_tina}:
+#    tipo_de_folha: 'normal'
+#    contract_id: 'hr_contract_tina'
+#    employee_id: 'hr_employee_tina'
+#    mes_do_ano: 10
+#    ano: 2016
+#-
+#  !python {model: hr.payslip, id: hr_payslip_tina}: |
+#    from openerp.exceptions import ValidationError
+#    self.compute_sheet()
+#    self.process_sheet()
+#
+#    if round(self.total_folha, 2) != 7149.19:
+#        raise ValidationError("Calculo da folha da TINA Incorreto")
