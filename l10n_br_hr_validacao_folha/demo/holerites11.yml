@@ -1,0 +1,58 @@
+-
+    Criar Holerite de Novembro
+-
+    Criar Holerite do LARA de Novembro do 2016
+-
+  !python {model: hr.contract, id: hr_contract_lara}: |
+    self.atribuir_ferias('2016-11-03', '2016-11-14', 12, 0)
+-
+  !record {model: hr.payslip, id: hr_payslip_lara}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_lara'
+    employee_id: 'hr_employee_lara'
+    mes_do_ano: 11
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_lara}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+#    if round(self.total_folha, 2) != 	4667.56:
+#        raise ValidationError("Calculo da folha da LARA Incorreto")
+###############################################################################
+-
+    Criar Holerite da MALU de Novembro do 2016
+-
+  !python {model: hr.contract, id: hr_contract_malu}: |
+    self.atribuir_ferias('2016-11-28', '2016-12-15', 12, 0)
+-
+  !record {model: hr.payslip, id: hr_payslip_malu}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_malu'
+    employee_id: 'hr_employee_malu'
+    mes_do_ano: 11
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_malu}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
+    print(self.total_folha)
+#    if round(self.total_folha, 2) != 	11089.84:
+#        raise ValidationError("Calculo da folha da MALU Incorreto")
+
+###############################################################################
+-
+    Criar Holerite da INGRID de Outubro do 2016
+-
+  !record {model: hr.payslip, id: hr_payslip_ingrid}:
+    tipo_de_folha: 'normal'
+    contract_id: 'hr_contract_ingrid'
+    employee_id: 'hr_employee_ingrid'
+    mes_do_ano: 11
+    ano: 2016
+-
+  !python {model: hr.payslip, id: hr_payslip_ingrid}: |
+    from openerp.exceptions import ValidationError
+    self.compute_sheet()
+    self.process_sheet()
