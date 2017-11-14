@@ -15,6 +15,11 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
 
+#. module: hr_holidays
+#: field:hr.employee,remaining_leaves:0
+msgid "Remaining Legal Leaves"
+msgstr "Abonos Restantes"
+
 #. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_abono_estudante
 msgid "Abono de Falta Estudante"
@@ -82,9 +87,14 @@ msgid "Compensation 2 hours"
 msgstr "Compensação - 2 horas"
 
 #. module: l10n_br_hr_holiday
+#: field:hr.holidays,contrato_id:0
+msgid "Funcionário"
+msgstr "Funcionário"
+
+#. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_death_of_relatives
 msgid "Death of relatives"
-msgstr "Falecimento de parentes"
+msgstr "Luto"
 
 #. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_dental_treatment
@@ -104,7 +114,7 @@ msgstr "Dias úteis Consecutivos"
 #. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_disposicao_TRE
 msgid "Disposicao TRE"
-msgstr "Disposicao TRE"
+msgstr "Disposição TRE"
 
 #. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_end_of_year_recess
@@ -155,12 +165,12 @@ msgstr "Licença Casamento"
 #. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_maternity_leave
 msgid "Maternity leave"
-msgstr "Licença maternidade"
+msgstr "Licença Maternidade"
 
 #. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_medical_certificate
 msgid "Medical Certificate"
-msgstr "Atestado médico"
+msgstr "Licença Médica"
 
 #. module: l10n_br_hr_holiday
 #: field:hr.holidays,message:0
@@ -188,21 +198,9 @@ msgid "Number of hours exceeded!"
 msgstr "Quantidade de horas excedidas!"
 
 #. module: l10n_br_hr_holiday
-#: model:ir.ui.menu,name:l10n_br_hr_holiday.menu_ocorrencias
-msgid "Ocorrencias"
-msgstr "Evento"
-
-#. module: l10n_br_hr_holiday
-#: selection:hr.holidays,tipo:0
-#: selection:hr.holidays.status,tipo:0
-#: model:ir.actions.act_window,name:l10n_br_hr_holiday.l10n_br_hr_holiday_action_ocorrencias
-msgid "Ocorrências"
-msgstr "Evento"
-
-#. module: l10n_br_hr_holiday
 #: model:hr.holidays.status,name:l10n_br_hr_holiday.holiday_status_paternity_leave
 msgid "Paternity leave"
-msgstr "Licença paternidade"
+msgstr "Licença Paternidade"
 
 #. module: l10n_br_hr_holiday
 #: field:hr.holidays,payroll_discount:0

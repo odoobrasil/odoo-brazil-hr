@@ -3,19 +3,9 @@
 # Copyright 2016 KMEE - Hendrix Costa <hendrix.costa@kmee.com.br>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import logging
 from openerp import api, fields, models, _
 from datetime import datetime, timedelta
 from openerp import tools
-
-_logger = logging.getLogger(__name__)
-
-try:
-    from pybrasil.feriado.constantes import (
-        TIPO_FERIADO, ABRANGENCIA_FERIADO,
-    )
-except ImportError:
-    _logger.info('Cannot import pybrasil')
 
 
 class ResourceCalendar(models.Model):
@@ -229,39 +219,36 @@ class ResourceCalendar(models.Model):
         :param datetime data_from: Data inicial do intervalo de tempo.
                datetime data_end: Data final do intervalo
         :return int : quantidade de dias que devem ser remunerada
-       """
-        quantidade_dias = (data_to - data_from).days + 1
-        if quantidade_dias > 30:
-            return 30
-        else:
-            return quantidade_dias
+        """
+        return 30 - data_from.day + 1
+        # quantidade_dias = (data_to - data_from).days + 1
+        # if quantidade_dias > 30:
+        #     return 30
+        # else:
+        #     return quantidade_dias
 
+    @api.multi
+    def data_eh_dia_util_bancario(self, data=datetime.now()):
+        """Verificar se data é dia util.
+        :param datetime data: Se nenhuma data referencia for passada
+                              verifique o dia de hoje.
+        :return boolean True: Se for dia útil
+                        False: Se Não for dia útil
+        """
+        if data.weekday() > 4:
+            return False
+        elif self.data_eh_feriado_bancario(data):
+            return False
+        return True
 
-class ResourceCalendarLeave(models.Model):
-
-    _inherit = 'resource.calendar.leaves'
-
-    country_id = fields.Many2one(
-        'res.country', string=u'País',
-        related='calendar_id.country_id',
-    )
-    state_id = fields.Many2one(
-        'res.country.state', u'Estado',
-        related='calendar_id.state_id',
-        domain="[('country_id','=',country_id)]",
-        readonly=True
-    )
-    l10n_br_city_id = fields.Many2one(
-        'l10n_br_base.city', u'Municipio',
-        related='calendar_id.l10n_br_city_id',
-        domain="[('state_id','=',state_id)]",
-        readonly=True
-    )
-    leave_type = fields.Selection(
-        string=u'Tipo',
-        selection=[item for item in TIPO_FERIADO.iteritems()],
-    )
-    abrangencia = fields.Selection(
-        string=u'Abrangencia',
-        selection=[item for item in ABRANGENCIA_FERIADO.iteritems()],
-    )
+    @api.multi
+    def proximo_dia_util_bancario(self, data_referencia=datetime.now()):
+        """Retornar o próximo dia util.
+        :param datetime data_referencia: Se nenhuma data referencia for passada
+                                   verifique se amanha é dia útil.
+        :return datetime Proximo dia util apartir da data referencia
+        """
+        if self.data_eh_dia_util_bancario(data_referencia):
+            return data_referencia
+        data_referencia += timedelta(days=1)
+        return self.proximo_dia_util_bancario(data_referencia)
