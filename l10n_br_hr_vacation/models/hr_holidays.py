@@ -2,11 +2,41 @@
 # Copyright 2016 KMEE - Hendrix Costa <hendrix.costa@kmee.com.br>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+import logging
 from openerp import api, models, fields
+
+_logger = logging.getLogger(__name__)
+
+try:
+    from pybrasil import data
+    from pybrasil.data import data_hora_horario_brasilia, parse_datetime, UTC
+except ImportError:
+    _logger.info('Cannot import pybrasil')
 
 
 class HrHolidays(models.Model):
     _inherit = 'hr.holidays'
+
+    @api.multi
+    def _check_date(self):
+        for holiday in self:
+            domain = [
+                ('data_inicio', '<=', holiday.data_inicio),
+                ('data_fim', '>=', holiday.data_fim),
+                ('employee_id', '=', holiday.employee_id.id),
+                ('id', '!=', holiday.id),
+                ('type', '=', holiday.type),
+                ('state', 'not in', ['cancel', 'refuse']),
+            ]
+            nholidays = self.search_count(domain)
+            if nholidays:
+                return False
+        return True
+
+    _constraints = [
+        (_check_date, 'You can not have 2 leaves that overlaps on same day!',
+         ['data_inicio', 'data_fim']),
+    ]
 
     sell_vacation = fields.Boolean(
         string=u'Sell Vacation',
@@ -42,16 +72,100 @@ class HrHolidays(models.Model):
     parent_id = fields.Many2one(
         comodel_name='hr.holidays',
         string=u'Worked Period',
-        ondelete='restrict',
+        ondelete='cascade',
         index=True,
     )
-    controle_ferias = fields.Many2one(
+    child_ids = fields.One2many(
+        comodel_name='hr.holidays',
+        inverse_name='parent_id',
+        string='Child Holidays',
+    )
+    controle_ferias = fields.Many2many(
         comodel_name='hr.vacation.control',
+        relation='vacation_control_holidays_rel',
+        column1='holiday_id',
+        column2='hr_vacation_control_id',
         string=u'Controle de Férias',
     )
+    controle_ferias_ids = fields.One2many(
+        comodel_name='hr.vacation.control',
+        string=u'Controle de Férias',
+        inverse_name='hr_holiday_add_id',
+    )
+
+    saldo_disponivel = fields.Float(
+        string='Saldo de dias de férias',
+        related='parent_id.number_of_days_temp',
+        help='Indica o total de dias que o funcionario poderá selecionar em '
+             'sua programação de férias.',
+    )
+    saldo_final = fields.Float(
+        string='Saldo final de dias de férias',
+        help=u'Saldo de dias de ferias de acordo com a fórmula: \n'
+             u'saldo_disponivel - dias selecionados.\n Se o resultado for '
+             u'positivo, o pedido de férias é regular e ja poderá ser gozado.',
+        compute='_compute_verificar_regularidade',
+    )
+    regular = fields.Boolean(
+        string=u'Regular',
+        compute='_compute_verificar_regularidade',
+    )
+
+    name = fields.Char(
+        string='Leave Type',
+        translate=True,
+        compute='_compute_name_holiday',
+    )
+
+    data_inicio = fields.Date(
+        string=u'Início',
+    )
+
+    data_fim = fields.Date(
+        string=u'Fim',
+    )
+
+    inicio_aquisitivo = fields.Date(
+        string=u'Início do Período Aquisitivo',
+        compute='_compute_periodo_aquisitivo',
+        store=True,
+    )
+    fim_aquisitivo = fields.Date(
+        string=u'Fim do Período Aquisitivo',
+        compute='_compute_periodo_aquisitivo',
+        store=True,
+    )
+
+    @api.multi
+    @api.depends('controle_ferias')
+    def _compute_periodo_aquisitivo(self):
+        for holiday in self:
+            if holiday.controle_ferias:
+                holiday.inicio_aquisitivo = \
+                    holiday.controle_ferias[0].inicio_aquisitivo
+                holiday.fim_aquisitivo = \
+                    holiday.controle_ferias[0].fim_aquisitivo
+
+    @api.depends('parent_id')
+    def _compute_verificar_regularidade(self):
+        for holiday in self:
+            if not holiday.parent_id:
+                continue
+            dias_de_direito = holiday.parent_id.number_of_days_temp
+            dias_selecionados = holiday.number_of_days_temp
+            holiday.saldo_final = dias_de_direito - dias_selecionados
+            holiday.regular = False
+            if holiday.controle_ferias:
+                if holiday.saldo_final >= 0 and holiday.date_from >= \
+                        holiday.controle_ferias[0].inicio_concessivo:
+                    holiday.regular = True
 
     @api.depends('vacations_days', 'sold_vacations_days')
     def _compute_days_temp(self):
+        """
+        Função que seta as variaveis temporarias de férias para exibição na
+        visao em formato de lista (resumo de férias)
+        """
         for holiday_id in self:
             if holiday_id.type == 'remove':
                 holiday_id.sold_vacations_days_temp = \
@@ -90,6 +204,47 @@ class HrHolidays(models.Model):
 
     @api.onchange('parent_id')
     def _compute_contract(self):
+        """
+        Função que configura o controle de férias no pedido de férias atual
+        """
         if self.parent_id:
             self.controle_ferias = self.parent_id.controle_ferias
-            self.name = 'Férias'
+
+    @api.depends('date_from', 'date_to', 'holiday_status_id', 'employee_id')
+    def _compute_name_holiday(self):
+        """
+        Função que configura o nome automaticamente do holidays. Se começar e
+        terminar em dias diferentes, mostre a data inicial e final do holidays,
+         senão só mostra a data que acontecerá o holidays
+        """
+        for holiday in self:
+            if holiday.data_inicio and holiday.data_fim and \
+                    holiday.holiday_status_id and holiday.employee_id:
+                date_from = data.formata_data(holiday.data_inicio)
+                date_to = data.formata_data(holiday.data_fim)
+
+                if date_from == date_to:
+                    holiday.name = holiday.holiday_status_id.name[:30] + \
+                        '[' + holiday.employee_id.name[:10] + '] ' + \
+                        ' (' + date_to + ')'
+                else:
+                    holiday.name = \
+                        '[' + holiday.employee_id.name + '] ' + \
+                        holiday.holiday_status_id.name[:30] + \
+                        ' (' + date_from + '-' + date_to + ')'
+
+    @api.onchange('data_inicio', 'data_fim', 'date_from', 'date_to')
+    def setar_datas_core(self):
+        for holiday in self:
+            if holiday.data_inicio and holiday.data_fim:
+                data_inicio = data_hora_horario_brasilia(
+                    parse_datetime(holiday.data_inicio + ' 00:00:00'))
+                holiday.date_from = str(UTC.normalize(data_inicio))[:19]
+                data_fim = data_hora_horario_brasilia(
+                    parse_datetime(holiday.data_fim + ' 23:59:59'))
+                holiday.date_to = str(UTC.normalize(data_fim))[:19]
+            elif holiday.date_from and holiday.date_to:
+                holiday.data_inicio = fields.Date.from_string(
+                    holiday.date_from
+                )
+                holiday.data_fim = fields.Date.from_string(holiday.date_to)

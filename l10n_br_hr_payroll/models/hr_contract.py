@@ -3,92 +3,178 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from openerp import api, fields, models
-from datetime import datetime
-
+from openerp import exceptions
+from datetime import datetime, timedelta
 
 class HrContract(models.Model):
 
     _inherit = 'hr.contract'
     _rec_name = 'nome_contrato'
 
-    @api.depends('employee_id', 'date_start')
-    def _nome_contrato(self):
-        for contrato in self:
-            nome = contrato.employee_id.name
-            inicio_contrato = contrato.date_start
-            fim_contrato = contrato.date_end
+    codigo_contrato = fields.Char(
+        string='Codigo de Identificacao',
+        required=True,
+        default="/",
+        readonly=True
+    )
 
-            if inicio_contrato:
-                inicio_contrato = datetime.strptime(inicio_contrato,
-                                                    '%Y-%m-%d')
-                inicio_contrato = inicio_contrato.strftime('%d/%m/%y')
-
-            if fim_contrato:
-                fim_contrato = datetime.strptime(fim_contrato, '%Y-%m-%d')
-                fim_contrato = fim_contrato.strftime('%d/%m/%y')
-                if fim_contrato > fields.Date.today():
-                    fim_contrato = "- D. %s" % fim_contrato
-                else:
-                    fim_contrato = "- %s" % fim_contrato
-            else:
-                fim_contrato = ''
-            matricula = contrato.name
-            nome_contrato = '[%s] %s - %s %s' % (matricula,
-                                                 nome, inicio_contrato,
-                                                 fim_contrato)
-            contrato.nome_contrato = nome_contrato
-
-    nome_contrato = fields.Char(default="[mat] nome - inicio - fim",
-                                compute="_nome_contrato", store=True)
+    is_editable = fields.Boolean(
+        string="Pode Alterar ?",
+        compute="_is_editable",
+        default=True,
+        store=True,
+    )
+    payslip_ids_confirmados = fields.One2many(
+        "hr.payslip",
+        "contract_id",
+        "Holerites Confirmados",
+        domain=[
+            ('state', '!=', 'draft'),
+            ('is_simulacao', '=', False)
+        ]
+    )
 
     @api.multi
-    def _buscar_salario_vigente_periodo(self, data_inicio, data_fim):
+    @api.depends('payslip_ids_confirmados', 'payslip_ids_confirmados.state')
+    def _is_editable(self):
+        for contrato in self:
+            if len(contrato.payslip_ids_confirmados) != 0:
+                contrato.is_editable = False
+            else:
+                contrato.is_editable = True
+
+    @api.model
+    def create(self, vals):
+        if vals.get('codigo_contrato', '/') == '/':
+            vals['codigo_contrato'] = self.env['ir.sequence'].get(self._name)
+            return super(HrContract, self).create(vals)
+
+    @api.depends('employee_id')
+    def _compute_nome_contrato(self):
+        for contrato in self:
+            nome = contrato.employee_id.name
+            matricula = contrato.codigo_contrato
+            nome_contrato = '[%s] %s' % (matricula, nome)
+            contrato.nome_contrato = nome_contrato if nome else ''
+
+    nome_contrato = fields.Char(
+        default="[mat] nome - inicio - fim",
+        compute="_compute_nome_contrato",
+        store=True
+    )
+
+    @api.multi
+    def _buscar_salario_vigente_periodo(self, data_inicio, data_fim, final=False):
         contract_change_obj = self.env['l10n_br_hr.contract.change']
+
+        #
+        # Checa se há alterações contratuais em estado Rascunho
+        # Não continua se houver
+        #
         change = contract_change_obj.search(
             [
-                ('change_date', '>=', data_inicio),
-                ('change_date', '<=', data_fim),
-                ('wage', '>', 0),
+                ('contract_id', '=', self.id),
+                ('change_type', '=', 'remuneracao'),
+                ('state', '=', 'draft'),
             ],
             order="change_date DESC",
-            limit=1,
         )
-        return change.wage
+        if change:
+            raise exceptions.ValidationError(
+                "Há alteração de remuneração em estado Rascunho "
+                "neste contrato, por favor exclua o alteração "
+                "contratual ou Aplique-a para torná-la efetiva "
+                "antes de calcular um holerite!"
+            )
+
+        # Busca todas as alterações de remuneração deste contrato
+        #
+        change = contract_change_obj.search(
+            [
+                ('contract_id', '=', self.id),
+                ('change_type', '=', 'remuneracao'),
+                ('state', '=', 'applied'),
+            ],
+            order="change_date DESC",
+        )
+
+        # Calcular o salário proporcional dentro do período especificado
+        # Pega o salário do contrato caso nunca tenha havido uma alteração
+        # contratual
+        #
+        salario_medio = self.wage
+        for i in range(len(change)):
+
+            # Dentro deste período houve alteração contratual ?
+            #
+            if change[i].change_date >= data_inicio and \
+                change[i].change_date <= data_fim:
+                i_2 = i + 1
+                data_mudanca = \
+                    datetime.strptime(change[i].change_date, "%Y-%m-%d")
+                d_inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+                d_fim = datetime.strptime(data_fim, "%Y-%m-%d")
+
+                # Calcula o número de dias dentro do período e quantos dias
+                # são de cada lado da alteração contratual
+                #
+                dias = (d_fim - d_inicio) + timedelta(days=1)
+                dias_2 = dias.days - data_mudanca.day
+                dias_1 = (data_mudanca.day - d_inicio.day) + 1
+
+                # Calcula cada valor de salário nos dias em com valores
+                # diferentes
+                #
+                salario_dia_2 = change[i].wage / dias.days
+                if len(change) >= 2:
+                    salario_dia_1 = change[i_2].wage / dias.days
+                else:
+                    salario_dia_1 = change[i].wage / dias.days
+                if len(change) >= 2:
+                    salario_dia_1 = change[i_2].wage / dias.days
+                else:
+                    salario_dia_1 = change[i].wage / dias.days
+                salario_medio_2 = salario_dia_2 * dias_2
+                salario_medio_1 = salario_dia_1 * dias_1
+
+                # Soma os 2 lados e temos o salário proporcional dentro
+                # do período
+                #
+                salario_medio = salario_medio_2 + salario_medio_1
+                break
+
+            # Houve alteração contratual anterior ao período atual
+            #
+            elif change[i].change_date < data_inicio:
+                salario_medio = change[i].wage
+                break
+
+        return salario_medio
 
     @api.multi
     def _salario_dia(self, data_inicio, data_fim):
-        if data_inicio >= self.date_start and \
-                (data_fim <= self.date_end or not self.date_end):
-            return self.wage/30
-        else:
-            return self._buscar_salario_vigente_periodo(
-                data_inicio, data_fim)/30
+        return self._salario_mes_proporcional(
+            data_inicio, data_fim) / 30
 
     @api.multi
     def _salario_hora(self, data_inicio, data_fim):
-        if data_inicio >= self.date_start and \
-                (data_fim <= self.date_end or not self.date_end):
-            return self.wage/(
-                220 if not self.monthly_hours else self.monthly_hours
-            )
-        else:
-            return self._buscar_salario_vigente_periodo(
-                data_inicio, data_fim)/(
-                220 if not self.monthly_hours else self.monthly_hours
-            )
+        wage = self._salario_mes_proporcional(data_inicio, data_fim)
+        hours_total = 220 if not self.monthly_hours else self.monthly_hours
+        return wage / hours_total
 
     @api.multi
     def _salario_mes(self, data_inicio, data_fim):
-        if data_inicio >= self.date_start and \
-                (data_fim <= self.date_end or not self.date_end):
-            return self.wage
-        else:
-            return self._buscar_salario_vigente_periodo(data_inicio, data_fim)
+        return self._buscar_salario_vigente_periodo(data_inicio, data_fim)
+
+    @api.multi
+    def _salario_mes_proporcional(self, data_inicio, data_fim):
+        return self._buscar_salario_vigente_periodo(data_inicio, data_fim)
 
     specific_rule_ids = fields.One2many(
         comodel_name='hr.contract.salary.rule',
         inverse_name='contract_id',
         string=u"Rúbricas específicas",
+        ondelete='cascade',
     )
     change_salary_ids = fields.One2many(
         comodel_name='l10n_br_hr.contract.change',
@@ -134,6 +220,7 @@ class HrContract(models.Model):
         comodel_name='res.company',
         string='Empresa',
         required=True,
+        default=lambda self: self.env.user.company_id or '',
     )
 
     # Admissão
@@ -186,10 +273,11 @@ class HrContract(models.Model):
         string="Início da segunda experiência"
     )
 
-    # Lotação
-    departamento_lotacao = fields.Selection(
-        selection=[],
-        string="Departamento/lotação"
+    department_id = fields.Many2one(
+        comodel_name='hr.department',
+        string='Departamento/Lotação',
+        related=False,
+        readonly=False,
     )
 
     lotacao_cliente_fornecedor = fields.Selection(
@@ -304,6 +392,10 @@ class HrContract(models.Model):
         inverse_name='contrato_id',
         string="Afastamentos"
     )
+    conta_bancaria_id = fields.Many2one(
+        string="Conta bancaria",
+        comodel_name='res.partner.bank',
+    )
 
 
 class Exame(models.Model):
@@ -368,10 +460,6 @@ class HrHoliday(models.Model):
 
     valor_inss = fields.Float(
         string="Valor INSS"
-    )
-
-    contrato_id = fields.Many2one(
-        comodel_name='hr.contract',
     )
 
 

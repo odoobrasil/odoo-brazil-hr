@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 KMEE INFORMATICA - Daniel Sadamo <daniel.sadamo@kmee.com.br>
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+<openerp>
+    <data>
+
+        <record model="ir.actions.act_window" id="hr_sefip_act_window">
+            <field name="name">SEFIP</field>
+            <field name="res_model">l10n_br.hr.sefip</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+        </record>
+
+        <record model="ir.ui.menu" id="hr_sefip_menu">
+            <field name="name">SEFIP</field>
+            <field name="parent_id" ref="hr.menu_hr_root"/>
+            <field name="sequence" eval="49"/>
+        </record>
+
+        <record model="ir.ui.menu" id="hr_sefip_submenu">
+            <field name="name">SEFIP</field>
+            <field name="parent_id" ref="menu_hr_root_payroll_relatorios"/>
+            <field name="action" ref="hr_sefip_act_window"/>
+            <field name="sequence" eval="1"/>
+        </record>
+
+        <record model="ir.ui.view" id="hr_sefip_form_view">
+            <field name="name">hr.sefip.form</field>
+            <field name="model">l10n_br.hr.sefip</field>
+            <field name="arch" type="xml">
+                <form string="SEFIP">
+                    <header>
+                        <button name="gerar_sefip" string="Gerar SEFIP" type="object" attrs="{'invisible':[('state', '!=', 'draft')]}"/>
+                        <button name="action_open" string="Confirmar SEFIP" type="object" attrs="{'invisible':[('state', '!=', 'draft')]}"/>
+                        <button name="action_draft" string="Voltar para provisório" type="object" attrs="{'invisible':[('state', '!=', 'open')]}" groups="base.group_hr_manager"/>
+                        <button name="action_sent" string="Confirmar Envio" type="object" attrs="{'invisible':[('state', '!=', 'open')]}"/>
+                        <button name="gerar_boletos" string="Gerar Guias" type="object" attrs="{'invisible':[('state', '!=', 'sent')]}"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <group cols="4" string="SEFIP">
+                        <group string="Responsável" colspan="4">
+                            <field name="company_id"
+                                   required="1"
+                                   options="{'no_create': True}"
+                            />
+                            <field name="responsible_user_id"
+                                   attrs="{'readonly': [('company_id', '=', False)]}"
+                                   options="{'no_create': True}"
+                                   required="1"
+                            />
+                            <field name="mes" required="1"/>
+                            <field name="ano" required="1"/>
+                            <field name="modalidade_arquivo" required="1"/>
+                         </group>
+                        <group  string="FGTS" colspan="4">
+                            <field name="codigo_recolhimento" required="1"/>
+                            <field name="recolhimento_fgts" required="1"/>
+                            <field name="data_recolhimento_fgts" required="1"/>
+                        </group>
+                        <group string="GPS" colspan="4">
+                            <field name="codigo_recolhimento_gps" required="1"/>
+                            <field name="recolhimento_gps" required="1"/>
+                            <field name="data_recolhimento_gps" required="1"/>
+                        </group>
+                        <group string="FPAS" colspan="4">
+                            <field name="codigo_fpas" required="1"/>
+                            <field name="eh_obrigatorio_codigo_outras_entidades" invisible="1" required="1"/>
+                            <field name="codigo_outras_entidades" attrs="{'required':[('eh_obrigatorio_codigo_outras_entidades', '=', True)]}"/>
+                            <field name="data_geracao"/>
+                        </group>
+                        <group string="GRCSU (Guia de Contribuição Sindical Urbana)" colspan="4">
+                            <field name="data_vencimento_grcsu" required="1"/>
+                        </group>
+                        <field name="eh_obrigatorio_informacoes_processo" invisible="1"/>
+                        <group string="Processo, convenção ou coletiva" colspan="4"  attrs="{'invisible':[('eh_obrigatorio_informacoes_processo', '!=', True)]}" >
+                            <field name="num_processo" attrs="{'required':[('eh_obrigatorio_informacoes_processo', '=', True)]}"/>
+                            <field name="ano_processo" attrs="{'required':[('eh_obrigatorio_informacoes_processo', '=', True)]}"/>
+                            <field name="vara_jcj" attrs="{'required':[('eh_obrigatorio_informacoes_processo', '=', True)]}"/>
+                            <field name="data_inicio" attrs="{'required':[('eh_obrigatorio_informacoes_processo', '=', True)]}"/>
+                            <field name="data_termino" attrs="{'required':[('eh_obrigatorio_informacoes_processo', '=', True)]}"/>
+                        </group>
+                    </group>
+                    <footer >
+                        <notebook>
+                            <page string="Prévia do SEFIP">
+                                <group string="Prévia do SEFIP">
+                                    <field nolabel="1" name="sefip"/>
+                                </group>
+                            </page>
+                            <page string="Arquivos Anexos">
+                                <group string="Arquivos Anexos">
+                                    <field nolabel="1" name="related_attachment_ids" >
+                                        <tree >
+                                            <field name="write_date"/>
+                                            <field name="name"/>
+                                            <field name="type"/>
+                                            <field name="attachment_ids"/>
+                                        </tree>
+                                        <form context="{'default_sefip_id': self.id}">
+                                            <group>
+                                                <field name="write_date" readonly="1"/>
+                                                <field name="sefip_id" invisible="1"/>
+                                                <field name="name"/>
+                                                <field name="type"/>
+                                                <field name="attachment_ids" widget="many2many_binary"/>
+                                            </group>
+                                        </form>
+                                    </field>
+                                </group>
+                            </page>
+                            <page string="Holerites">
+                                <group string="Holerites do SEFIP">
+                                    <field nolabel="1" name="folha_ids" readonly="1"/>
+                                </group>
+                            </page>
+
+                            <page string="Boletos"  attrs="{'invisible':[('boletos_ids','=',[])]}">
+                                <group string="Boletos Gerados">
+                                    <field nolabel="1" name="boletos_ids" readonly="1"/>
+                                </group>
+                            </page>
+
+                        </notebook>
+                    </footer>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"
+                               widget="mail_followers"
+                               groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="hr_sefip_tree_view">
+            <field name="name">hr.sefip.tree (in l10n_br_hr_arquivos_governo) </field>
+            <field name="model">l10n_br.hr.sefip</field>
+            <field name="arch" type="xml">
+                <tree string="Check Line">
+                    <field name="mes"/>
+                    <field name="ano"/>
+                    <field name="modalidade_arquivo"/>
+                    <field name="company_id"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+    </data>
+</openerp>

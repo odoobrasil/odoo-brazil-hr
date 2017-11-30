@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<openerp>
+    <data>
+        <record model="account.journal" id="payroll_account_journal">
+            <field name="name">Diário Folha Pagamento</field>
+            <field name="code">FOPAG</field>
+            <field name="type">general</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+    </data>
+</openerp>

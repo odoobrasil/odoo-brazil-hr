@@ -2,14 +2,15 @@
 # Copyright 2016 KMEE - Hendrix Costa <hendrix.costa@kmee.com.br>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from openerp import api, models, fields
-from dateutil.relativedelta import relativedelta
 from datetime import datetime
+
+from dateutil.relativedelta import relativedelta
+from openerp import api, models, fields
 
 
 class HrVacationControl(models.Model):
     _name = 'hr.vacation.control'
-    _order = 'inicio_aquisitivo desc'
+    _order = 'inicio_aquisitivo desc, inicio_gozo desc'
     _rec_name = 'display_name'
 
     inicio_aquisitivo = fields.Date(
@@ -50,7 +51,7 @@ class HrVacationControl(models.Model):
 
     faltas = fields.Integer(
         string=u'Faltas',
-        compute='calcular_faltas',
+        compute='_compute_calcular_faltas',
     )
 
     afastamentos = fields.Integer(
@@ -59,18 +60,34 @@ class HrVacationControl(models.Model):
     )
 
     dias = fields.Integer(
-        string=u'Dias',
-        compute='calcular_dias',
+        string=u'Dias de Direito',
+        help=u'Dias que o funcionario tera direito a tirar ferias. '
+             u'De acordo com a quantidade de faltas em seu perido aquisitivo',
+        compute='_compute_calcular_dias',
     )
 
     saldo = fields.Float(
         string=u'Saldo',
-        compute='calcular_saldo_dias',
+        help=u'Saldo dos dias de direitos proporcionalmente aos avos ja '
+             u'trabalhados no periodo aquisitivo',
+        compute='_compute_calcular_saldo_dias',
+    )
+
+    dias_gozados = fields.Float(
+        string=u'Dias Gozados',
+        help=u'Quantidade de dias de ferias do periodo aquisitivo que ja foram'
+             u'gozados pelo funcionario em outro periodo de ferias',
+        default=0,
+    )
+
+    dias_gozados_anteriormente = fields.Float(
+        string=u'Dias Gozados Anteriormente',
+        default=0,
     )
 
     avos = fields.Integer(
         string=u'Avos',
-        compute='calcular_avos',
+        compute='_compute_calcular_avos',
     )
 
     proporcional = fields.Boolean(
@@ -83,12 +100,12 @@ class HrVacationControl(models.Model):
 
     pagamento_dobro = fields.Boolean(
         string=u'Pagamento em Dobro?',
-        compute='calcular_pagamento_dobro',
+        compute='_compute_calcular_pagamento_dobro',
     )
 
     dias_pagamento_dobro = fields.Integer(
         string=u'Dias Pagamento em Dobro',
-        compute='calcular_dias_pagamento_dobro',
+        compute='_compute_calcular_dias_pagamento_dobro',
     )
 
     perdido_afastamento = fields.Boolean(
@@ -100,10 +117,23 @@ class HrVacationControl(models.Model):
         string=u'Contrato Vigente',
     )
 
-    hr_holiday_ids = fields.One2many(
+    # hr_holiday_ids = fields.Many2many(
+    #     comodel_name='hr.holidays',
+    #     relation='vacation_control_holidays_rel',
+    #     column1='hr_vacation_control_id',
+    #     column2='holiday_id',
+    #     string=u'Período Aquisitivo',
+    #     ondelete='set null',
+    # )
+
+    hr_holiday_add_id = fields.Many2one(
         comodel_name='hr.holidays',
-        inverse_name='controle_ferias',
-        string='Período Aquisitivo'
+        string=u'Férias (ADD)',
+    )
+
+    hr_holiday_remove_id = fields.Many2one(
+        comodel_name='hr.holidays',
+        string=u'Pedido de férias',
     )
 
     display_name = fields.Char(
@@ -111,6 +141,21 @@ class HrVacationControl(models.Model):
         compute='_compute_display_name',
         store=True
     )
+
+    # @api.depends('hr_holiday_ids')
+    # @api.multi
+    # def _compute_have_holidays(self):
+    #     for controle in self:
+    #         if controle.hr_holiday_ids:
+    #             for holiday in controle.hr_holiday_ids:
+    #                 if holiday.type == 'add':
+    #                     controle.have_holidays = True
+
+    # have_holidays = fields.Boolean(
+    #     string=u'Have Holidays?',
+    #     compute='_compute_have_holidays',
+    #     default=False,
+    # )
 
     @api.depends('inicio_aquisitivo', 'fim_aquisitivo')
     def _compute_display_name(self):
@@ -144,10 +189,10 @@ class HrVacationControl(models.Model):
             'limite_aviso': limite_aviso,
         }
 
-    def calcular_faltas(self):
+    def _compute_calcular_faltas(self):
         for record in self:
             employee_id = record.contract_id.employee_id.id
-            leaves = record.env['resource.calendar'].get_ocurrences(
+            leaves = self.env['hr.holidays'].get_ocurrences(
                 employee_id,
                 record.inicio_aquisitivo,
                 record.fim_aquisitivo
@@ -162,13 +207,21 @@ class HrVacationControl(models.Model):
             dias_de_direito = 18
         elif self.faltas > 5:
             dias_de_direito = 24
+        dias_de_direito -= self.dias_gozados_anteriormente
         return dias_de_direito
 
-    def calcular_avos(self):
+    def _compute_calcular_avos(self):
         for record in self:
             date_begin = fields.Datetime.from_string(record.inicio_aquisitivo)
-            if fields.Date.today() < record.fim_aquisitivo:
-                date_end = fields.Datetime.from_string(fields.Date.today())
+
+            # Pega data_fim do contexto se existir, para cálculo de simulações
+            if "data_fim" in self.env.context:
+                hoje = self.env.context['data_fim']
+            else:
+                hoje = fields.Date.today()
+
+            if hoje < record.fim_aquisitivo:
+                date_end = fields.Datetime.from_string(hoje)
             else:
                 date_end = fields.Datetime.from_string(record.fim_aquisitivo)
             avos_decimal = (date_end - date_begin).days / 30.0
@@ -179,27 +232,72 @@ class HrVacationControl(models.Model):
             else:
                 record.avos = int(avos_decimal)
 
-    def calcular_saldo_dias(self):
+    @api.depends('dias_gozados')
+    def _compute_calcular_saldo_dias(self):
         for record in self:
-            record.saldo = record.avos * record.dias_de_direito() / 12.0
+            saldo = record.dias_de_direito() * record.avos / 12.0
+            record.saldo = saldo - record.dias_gozados
 
-    def calcular_dias(self):
+    def _compute_calcular_dias(self):
         for record in self:
             record.dias = record.dias_de_direito()
 
-    def calcular_dias_pagamento_dobro(self):
+    def _compute_calcular_dias_pagamento_dobro(self):
         for record in self:
-            dias_pagamento_dobro = 0
-            if record.fim_gozo > record.fim_concessivo:
-                dias_pagamento_dobro = (
-                    fields.Date.from_string(record.fim_gozo) -
-                    fields.Date.from_string(record.fim_concessivo)
-                ).days
-            if dias_pagamento_dobro > 30:
-                dias_pagamento_dobro = 30
-            record.dias_pagamento_dobro = dias_pagamento_dobro
+            pass
+            # dias_pagamento_dobro = 0
+            # if record.fim_gozo > record.fim_concessivo:
+            #     dias_pagamento_dobro = (
+            #         fields.Date.from_string(record.fim_gozo) -
+            #         fields.Date.from_string(record.fim_concessivo)
+            #     ).days
+            # if dias_pagamento_dobro > 30:
+            #     dias_pagamento_dobro = 30
+            # record.dias_pagamento_dobro = dias_pagamento_dobro
 
-    def calcular_pagamento_dobro(self):
+    def _compute_calcular_pagamento_dobro(self):
         for record in self:
             pagamento_dobro = (record.dias_pagamento_dobro > 0)
             record.pagamento_dobro = pagamento_dobro
+
+    def gerar_holidays_ferias(self):
+        """
+        Gera novos pedidos de férias (holidays do tipo 'add') de acordo com as
+        informaçoes do controle de férias em questão.
+        """
+        vacation_id = self.env.ref(
+            'l10n_br_hr_holiday.holiday_status_vacation').id
+        holiday_id = self.env['hr.holidays'].create({
+            'name': 'Periodo Aquisitivo: %s ate %s'
+                    % (self.inicio_aquisitivo,
+                       self.fim_aquisitivo),
+            'employee_id': self.contract_id.employee_id.id,
+            'contrato_id': self.contract_id.id,
+            'holiday_status_id': vacation_id,
+            'type': 'add',
+            'holiday_type': 'employee',
+            'vacations_days': 30,
+            'sold_vacations_days': 0,
+            'number_of_days_temp': 30,
+            'controle_ferias': [(6, 0, [self.id])],
+        })
+        return holiday_id
+
+    @api.multi
+    def action_create_periodo_aquisitivo(self):
+        """
+        Acção disparada na linha da visão tree do controle de férias
+        :return:
+        """
+        for controle in self:
+            controle.gerar_holidays_ferias()
+
+    # @api.multi
+    # def unlink(self):
+    #     """
+    #    Se excluir o controle de ferias, excluir todos os holidays atrelados
+    #     FIXTO: utilizar o ondelete=cascade na definição do campo
+    #    """
+    #     for holidays in self.hr_holiday_ids:
+    #        holidays.unlink()
+    #     return super(HrVacationControl, self).unlink()
